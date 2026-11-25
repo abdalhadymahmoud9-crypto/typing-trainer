@@ -100,12 +100,12 @@
       ctx.beginPath(); ctx.moveTo(30, 10); ctx.lineTo(30, ht - 20); ctx.lineTo(w - 6, ht - 20); ctx.stroke();
       ctx.fillText(max, 2, 18); ctx.fillText('0', 12, ht - 22);
       var x0 = 36, step = pts.length > 1 ? (w - 50) / (pts.length - 1) : 0;
-      ctx.strokeStyle = '#FFA586'; ctx.lineWidth = 2.5; ctx.beginPath();
+      ctx.strokeStyle = '#c9a7ff'; ctx.lineWidth = 2.5; ctx.beginPath();
       pts.forEach(function (p, i) {
         var x = x0 + i * step, y = (ht - 20) - (p.wpm / max) * (ht - 36);
         if (i) ctx.lineTo(x, y); else ctx.moveTo(x, y);
       });
-      ctx.stroke(); ctx.fillStyle = '#FFA586';
+      ctx.stroke(); ctx.fillStyle = '#c9a7ff';
       pts.forEach(function (p, i) {
         ctx.beginPath(); ctx.arc(x0 + i * step, (ht - 20) - (p.wpm / max) * (ht - 36), 3.5, 0, 7); ctx.fill();
       });

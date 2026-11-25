@@ -85,13 +85,13 @@
 
   function renderSteps(i) {
     var box = $('c-steps'), s = load(); box.innerHTML = '';
-    if (i < 1 || i > 3) return;
+    if (i < 1 || i > 7) return;
     var sd = S.stepsDone(s, track, i);
-    var h = document.createElement('p'); h.className = 'note'; h.textContent = 'خطوات الحروف: ' + sd[0] + ' من ' + sd[1] + ' (كل خطوة: حرفين جداد، أزواج حروف، كلمات حقيقية، جملة. المطلوب دقة ٩٠٪ من غير شرط سرعة). تقدر تعمل اختبار المرحلة مباشرة لو عارف الحروف.'; box.appendChild(h);
+    var h = document.createElement('p'); h.className = 'note'; h.textContent = 'خطوات الحروف: ' + sd[0] + ' من ' + sd[1] + ' (' + (i <= 3 ? 'كل خطوة: حرفين جداد، أزواج حروف، كلمات حقيقية، جملة' : 'كل خطوة نص قصير على نقطة واحدة') + '. المطلوب دقة ٩٠٪ من غير شرط سرعة). تقدر تعمل اختبار المرحلة مباشرة لو عارف الحروف.'; box.appendChild(h);
     var grid = document.createElement('div'); grid.className = 'stepgrid'; box.appendChild(grid);
     G.stepsOf(i).forEach(function (idx) {
       var b = document.createElement('button'); b.className = 'les'; var open = S.stepOpen(s, track, idx); b.disabled = !open;
-      var done = S.stepDone(s, track, idx), keys = G.STEPS[idx].add.map(function (c) { return L.LAYOUT[track][c] || c; }).join(' ');
+      var done = S.stepDone(s, track, idx), keys = G.ALL[idx].text ? G.ALL[idx].titles[track] : G.STEPS[idx].add.map(function (c) { return L.LAYOUT[track][c] || c; }).join(' ');
       b.innerHTML = '<b></b><span></span><div class="st"></div>'; b.firstChild.textContent = 'خطوة ' + (idx + 1); b.children[1].textContent = keys; b.children[2].textContent = done ? '✓ تمت' : (open ? 'مفتوحة' : 'مقفولة');
       b.onclick = function () { stepIdx = idx; begin('step'); }; grid.appendChild(b);
     });

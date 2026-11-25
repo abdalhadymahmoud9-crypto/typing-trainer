@@ -12,7 +12,7 @@
   var EXAM = { pass: { minAcc: 96, minWpm: 30 }, distinction: { minAcc: 98, minWpm: 45 } };
   var STAGES = 7;
   var STEP_RULE = { minAcc: 90, minWpm: 0 }; // key steps are about accuracy only
-  var STEP_STAGE = [1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3];
+  var STEP_STAGE = [1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 6, 6, 6, 7, 7];
   var KEY = 'typing-trainer-course-v1';
 
   function empty() { return { v: 1, results: [], certs: [], manual: [] }; }

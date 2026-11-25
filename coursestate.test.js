@@ -36,7 +36,7 @@ test('records have unique ids so sync merges by id', function () {
   assert.equal(new Set(s.results.map(function (r) { return r.id; })).size, 20);
 });
 test('steps: sequential, accuracy-only gate, stage test-out opens the whole stage, kstats stored', function () {
-  var G = require('./coursegen.js'); assert.deepEqual(S.STEP_STAGE, G.STEPS.map(function (x) { return x.stage; }));
+  var G = require('./coursegen.js'); assert.deepEqual(S.STEP_STAGE, G.ALL.map(function (x) { return x.stage; }));
   var s = S.empty(); assert.ok(S.stepOpen(s, 'en', 0)); assert.ok(!S.stepOpen(s, 'en', 1)); assert.ok(!S.stepOpen(s, 'en', 5));
   var low = { acc: 89, wpm: 0, complete: true, perKey: { KeyF: [5, 1, 900] } }; s = S.addResult(s, 'en', 'step', 0, low, 1).state; assert.ok(!S.stepDone(s, 'en', 0));
   s = S.addResult(s, 'en', 'step', 0, { acc: 90, wpm: 1, complete: true, perKey: { KeyF: [5, 0, 900] } }, 2).state; assert.ok(S.stepDone(s, 'en', 0)); assert.ok(S.stepOpen(s, 'en', 1)); assert.ok(!S.stepOpen(s, 'en', 2));

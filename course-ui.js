@@ -6,7 +6,7 @@
   var TITLES = { 0: 'قبل ما تبدأ', 1: 'صف الأساس', 2: 'الصف العلوي', 3: 'الصف السفلي وحروف الأطراف', 4: 'Shift وعلامات الترقيم والأرقام', 5: 'كلمات وجمل بطلاقة', 6: 'بناء السرعة', 7: 'نص حقيقي طويل' };
   var INTRO = {
     0: 'اقعد معتدل، ضهرك مسنود، ورسغك مرتاح مش مسنود على الترابيزة. حط صوابعك على صف الأساس (الإنجليزي: A S D F و J K L ;). الصوابع الاتنين اللي ماسكين F و J فيهم نتوءة صغيرة تحسّك مكانك من غير ما تبص. المرحلة دي مفيهاش اختبار.',
-    1: 'صف الأساس مع G و H. الهدف: دقة قبل أي سرعة.', 2: 'الصف العلوي. كل صباع بيطلع لفوق وبيرجع لمكانه.', 3: 'الصف السفلي والفاصلة والنقطة وحروف الأطراف (ط، ج، د في العربي).',
+    1: 'صف الأساس كله مع حرفين من الصف نفسه بيمدّ فيهم السبابتين. الهدف: دقة قبل أي سرعة.', 2: 'الصف العلوي. كل صباع بيطلع لفوق وبيرجع لمكانه.', 3: 'الصف السفلي والفاصلة والنقطة وحروف الأطراف (ط، ج، د في العربي).',
     4: track === 'ar' ? 'همزات (أ إ آ) وعلامات الترقيم العربية (؟ ، ؛). مواضع Shift بتختلف من نظام لنظام، فالمرحلة دي بتتقيّم على الحرف اللي بيطلع فعلاً مش على مكان الزرار. الأرقام والتشكيل مش متدرّب عليهم هنا.' : 'الحروف الكبيرة بـ Shift والأرقام وعلامات الترقيم. بتتقيّم على الحرف اللي بيطلع فعلاً.',
     5: 'كلمات وجمل بطلاقة. اقرأ الكلمة اللي جاية وإيدك بتخلص اللي قبلها.', 6: 'كلمات متكررة وجمل قصيرة بسرعة أعلى شوية. الغلط المصحَّح بيتحسب عليك في الدقة.', 7: 'فقرات حقيقية. هنا بتتعوّد على الاستمرار من غير توقف.'
   };
@@ -74,7 +74,7 @@
   function openStage(i) {
     stage = i; $('c-play').classList.remove('on'); $('c-info').hidden = false; $('c-cert').hidden = true; $('c-info').scrollIntoView({ block: 'nearest' });
     var s = load();
-    if (i === 8) { $('c-title').textContent = 'الاختبار النهائي'; $('c-intro').textContent = 'نص ما اتدرّبتش عليه (٤٠٠ حرف تقريباً أو أكتر، مفيش مؤقت: السرعة بتتحسب من أول ضغطة لآخر ضغطة). فيه نصّين بس لكل مسار فهيتكرروا بعد كام محاولة. للعدّي: دقة ٩٦٪ وسرعة ٣٠ ك/د على الأقل، ٩٨٪ و٤٥ للتميّز. الأرقام دي معايير اخترتها للتطبيق ومش معتمدة من جهة خارجية' + (track === 'ar' ? '، وفي العربي لسه مبدئية.' : '.') + ' تقدر تعيد من غير حد أقصى وأفضل نتيجة هي اللي بتتحسب. بتتقيّم على الحرف اللي بيطلع.'; $('c-drill').hidden = true; $('c-test').textContent = 'ابدأ الاختبار النهائي'; $('c-test').hidden = false; return; }
+    if (i === 8) { $('c-title').textContent = 'الاختبار النهائي'; $('c-intro').textContent = 'نص ما اتدرّبتش عليه (٤٠٠ حرف تقريباً أو أكتر، مفيش مؤقت: السرعة بتتحسب من أول ضغطة لآخر ضغطة). ' + B.CONTENT[track].exam.length + ' نصوص مختلفة في المسار ده، فهتتكرر بعد كام محاولة. للعدّي: دقة ٩٦٪ وسرعة ٣٠ ك/د على الأقل، ٩٨٪ و٤٥ للتميّز. الأرقام دي معايير اخترتها للتطبيق ومش معتمدة من جهة خارجية' + (track === 'ar' ? '، وفي العربي لسه مبدئية.' : '.') + ' تقدر تعيد من غير حد أقصى وأفضل نتيجة هي اللي بتتحسب. بتتقيّم على الحرف اللي بيطلع.'; $('c-drill').hidden = true; $('c-test').textContent = 'ابدأ الاختبار النهائي'; $('c-test').hidden = false; return; }
     $('c-title').textContent = (i === 0 ? '' : 'مرحلة ' + i + ': ') + TITLES[i]; $('c-intro').textContent = INTRO[i] || '';
     renderSteps(i);
     if (i === 0) { $('c-drill').hidden = true; $('c-test').hidden = true; $('c-review').hidden = true; $('c-weak').hidden = true; return; }
@@ -88,11 +88,12 @@
     if (i < 1 || i > 3) return;
     var sd = S.stepsDone(s, track, i);
     var h = document.createElement('p'); h.className = 'note'; h.textContent = 'خطوات الحروف: ' + sd[0] + ' من ' + sd[1] + ' (كل خطوة: حرفين جداد، أزواج حروف، كلمات حقيقية، جملة. المطلوب دقة ٩٠٪ من غير شرط سرعة). تقدر تعمل اختبار المرحلة مباشرة لو عارف الحروف.'; box.appendChild(h);
+    var grid = document.createElement('div'); grid.className = 'stepgrid'; box.appendChild(grid);
     G.stepsOf(i).forEach(function (idx) {
       var b = document.createElement('button'); b.className = 'les'; var open = S.stepOpen(s, track, idx); b.disabled = !open;
       var done = S.stepDone(s, track, idx), keys = G.STEPS[idx].add.map(function (c) { return L.LAYOUT[track][c] || c; }).join(' ');
       b.innerHTML = '<b></b><span></span><div class="st"></div>'; b.firstChild.textContent = 'خطوة ' + (idx + 1); b.children[1].textContent = keys; b.children[2].textContent = done ? '✓ تمت' : (open ? 'مفتوحة' : 'مقفولة');
-      b.onclick = function () { stepIdx = idx; begin('step'); }; box.appendChild(b);
+      b.onclick = function () { stepIdx = idx; begin('step'); }; grid.appendChild(b);
     });
   }
   function begin(kind) {

@@ -68,7 +68,7 @@
   function renderStep() {
     var rb = $('ribbon'); rb.innerHTML = '';
     tokens.forEach(function (t, i) {
-      var s = document.createElement('span'); s.textContent = t === ' ' ? '␣' : t;
+      var s = document.createElement('span'); s.textContent = t === ' ' ? '·' : t;
       s.className = i < pos ? 'done' : (i === pos ? 'now' : ''); rb.appendChild(s);
     });
     $('st-prog').textContent = pos + ' / ' + tokens.length;

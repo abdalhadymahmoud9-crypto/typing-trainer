@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#161E2F">
+<meta name="description" content="مدرّب كتابة بالعربي والإنجليزي: سرعة ودقة وأكثر الحروف اللي بتغلط فيها.">
+<link rel="icon" type="image/svg+xml" href="logo.svg">
+<title>مدرّب الكتابة</title>
+<link rel="stylesheet" href="style.css">
+<style>
+.words{font-size:1.7rem;line-height:2.4;padding:18px;border:1px solid var(--line);border-radius:14px;background:rgba(0,0,0,.22);height:230px;overflow:hidden;user-select:none}
+.words[dir=ltr]{font-family:ui-monospace,Consolas,monospace;font-size:1.5rem}
+.w{padding:0 5px;border-radius:6px;display:inline-block}
+.w.cur{background:rgba(255,165,134,.22);outline:1px solid var(--accent)}
+.w.ok{color:var(--good)}.w.no{color:var(--bad);text-decoration:line-through}
+.logo{width:42px;height:42px;vertical-align:middle;margin-inline-end:10px}
+canvas{width:100%;height:160px;display:block}
+.keys span{display:inline-block;margin:3px;padding:4px 12px;border-radius:10px;border:1px solid var(--line);background:rgba(255,255,255,.04)}
+.timer{font-size:2rem;font-weight:800;color:var(--accent)}
+#input{font-size:1.3rem;margin-top:14px}
+</style>
+</head>
+<body>
+<main class="wrap">
+<header class="top"><h1><img class="logo" src="logo.svg" alt="">مدرّب الكتابة</h1><a href="https://abdalhady.vercel.app">← البورتفوليو</a></header>
+<p class="lead">اكتب الكلمات اللي قدامك. السرعة بتتحسب من الكلمات الصح بس، والدقة من الحروف.</p>
+
+<section class="card" aria-label="الإعدادات">
+<div class="row">
+<span class="muted">اللغة</span>
+<button id="lang-ar" class="on" aria-pressed="true">عربي</button>
+<button id="lang-en" aria-pressed="false">English</button>
+<span class="muted" style="margin-inline-start:14px">المدة</span>
+<button id="t-30" class="on" aria-pressed="true">٣٠ ث</button>
+<button id="t-60" aria-pressed="false">٦٠ ث</button>
+<button id="restart" class="primary" style="margin-inline-start:auto">جملة جديدة</button>
+</div>
+</section>
+
+<section class="card">
+<div class="row" style="justify-content:space-between"><div class="timer" id="timer" aria-live="off">30</div><div class="muted" id="hint">ابدأ الكتابة وهيشتغل العدّاد</div></div>
+<div id="words" class="words" dir="rtl" aria-label="الكلمات المطلوبة"></div>
+<label class="sr" for="input">اكتب هنا</label>
+<input id="input" type="text" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="اكتب هنا، المسطرة بتنقلك للكلمة اللي بعدها">
+</section>
+
+<section class="card" id="result" hidden aria-live="polite">
+<h2>النتيجة</h2>
+<div class="grid">
+<div class="stat"><b id="r-wpm">0</b><span>كلمة في الدقيقة</span></div>
+<div class="stat"><b id="r-acc">0%</b><span>الدقة</span></div>
+<div class="stat"><b id="r-words">0</b><span>كلمات صح</span></div>
+<div class="stat"><b id="r-best">0</b><span>أفضل نتيجتك</span></div>
+</div>
+</section>
+
+<section class="card">
+<h2>آخر المحاولات (سرعة)</h2>
+<canvas id="chart" role="img" aria-label="رسم بياني لسرعة آخر المحاولات"></canvas>
+<p class="muted" id="chart-empty">لسه مفيش محاولات.</p>
+<h2 style="margin-top:14px">الحروف اللي بتغلط فيها أكتر</h2>
+<div class="keys" id="weak"><span class="muted">هتظهر بعد أول محاولة.</span></div>
+<div class="row" style="margin-top:12px"><button id="clear" class="danger">مسح السجل</button></div>
+</section>
+<footer>البيانات محفوظة في المتصفح بس. الكلمات مكتوبة بإيدينا، والتشكيل مش بيتحسب غلط. اتبنى بمساعدة ذكاء اصطناعي. <a href="https://github.com/abdalhadymahmoud9-crypto/typing-trainer">الكود</a></footer>
+</main>
+<script src="logic.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

@@ -22,7 +22,7 @@
   function renderList() {
     var p = load(), box = $('lesson-list'); box.innerHTML = ''; var done = 0;
     for (var i = 0; i < L.lessonCount(); i++) (function (i) {
-      var rec = p[lang] && p[lang][String(i)], ok = L.isUnlocked(p, lang, i);
+      var rec = p[lang] && p[lang][String(i)]; if (rec && typeof rec.stars !== 'number') rec = null; var ok = L.isUnlocked(p, lang, i);
       if (rec && rec.stars >= 1) done++;
       var b = document.createElement('button'); b.className = 'les' + (i === cur ? ' cur' : ''); b.disabled = !ok;
       b.innerHTML = '<b>درس ' + (i + 1) + '</b>';

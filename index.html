@@ -40,11 +40,44 @@ button.primary{background:linear-gradient(135deg,#c084fc,#7c3aed);color:#fff}
 canvas{width:100%;height:160px;display:block}
 .keys span{display:inline-block;margin:3px;padding:4px 12px;border-radius:10px;border:1px solid var(--line);background:rgba(124,58,237,.18)}
 footer{color:var(--muted)}
+
+.syncbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:-6px 0 16px;color:var(--muted);font-size:.92rem}
+.syncbar button{min-height:36px;padding:2px 14px}.syncbar .who{color:var(--text);font-weight:700}.syncbar small{display:block;flex-basis:100%}
+.tabs{display:inline-flex;gap:2px;padding:3px;border:1px solid var(--line);border-radius:999px;background:rgba(0,0,0,.25);margin-bottom:16px}
+.tabs button{border:0;background:transparent;color:var(--muted);border-radius:999px;min-height:38px;padding:4px 18px}
+.tabs button.on{background:linear-gradient(135deg,#9d5cff,#6d28d9);color:#fff}
+.lessons{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.les{text-align:start;display:block;padding:12px 14px;border-radius:14px;min-height:84px;line-height:1.4}
+.les b{display:block;font-size:.8rem;color:var(--muted)}.les .st{color:#ffd76a;letter-spacing:2px;font-size:.95rem}
+.les[disabled]{opacity:.45;cursor:not-allowed}
+.les.cur{border-color:var(--accent)}
+.stage{display:none}.stage.on{display:block}
+.ribbon{direction:rtl;display:flex;flex-wrap:wrap;gap:4px;justify-content:center;padding:14px;border:1px solid var(--line);border-radius:16px;background:rgba(0,0,0,.25);min-height:70px}
+.ribbon.ltr{direction:ltr}
+.ribbon span{display:inline-block;min-width:1.5ch;text-align:center;font-size:1.5rem;padding:2px 6px;border-radius:8px;color:var(--muted)}
+.ribbon .done{color:var(--good)}.ribbon .now{background:rgba(201,167,255,.25);color:#fff;box-shadow:inset 0 -3px 0 var(--accent)}
+.big{font-size:4.5rem;font-weight:800;text-align:center;line-height:1.2;margin:8px 0 2px;color:#fff}
+.fing{text-align:center;color:var(--accent);min-height:1.6em;margin-bottom:8px}
+.kb{direction:ltr;display:grid;gap:6px;justify-content:center;margin:10px auto;max-width:760px}
+.kbrow{display:flex;gap:6px;justify-content:center}
+.kbrow:nth-child(2){margin-inline-start:18px}.kbrow:nth-child(3){margin-inline-start:44px}
+.key{flex:0 0 auto;width:clamp(24px,6.4vw,50px);height:clamp(30px,7vw,48px);border:2px solid var(--fc,#555);border-radius:9px;display:grid;place-items:center;font-size:clamp(.8rem,2.4vw,1.2rem);background:rgba(255,255,255,.04);color:var(--text);position:relative}
+.key.home::after{content:"";position:absolute;bottom:4px;width:12px;height:3px;border-radius:2px;background:var(--text);opacity:.6}
+.key.dim{opacity:.35}
+.key.hit{background:var(--fc);color:#120b24;font-weight:800;transform:translateY(-3px) scale(1.08);box-shadow:0 8px 20px rgba(0,0,0,.45)}
+.key.bad{background:#ff8aa5;color:#2a0c14}
+.space{width:clamp(160px,42vw,330px)}
+.legend{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;font-size:.8rem;color:var(--muted)}
+.legend i{display:inline-block;width:12px;height:12px;border-radius:4px;vertical-align:middle;margin-inline-end:4px}
+.note{color:var(--muted);font-size:.88rem;margin:8px 0 0}
 </style>
 </head>
 <body>
 <main class="wrap">
 <header class="hero"><img class="logo" src="logo.svg" alt=""><div><h1>مدرّب الكتابة</h1><p>اكتب أسرع وبدقة أعلى، بالعربي أو الإنجليزي</p></div></header>
+<div class="syncbar"><span id="auth"></span><span id="sync"></span></div>
+<nav class="tabs" aria-label="الأقسام"><button id="tab-test" class="on">اختبار السرعة</button><button id="tab-lessons">دروس الأصابع</button></nav>
+<div id="pane-test">
 
 <section class="card" aria-label="الإعدادات">
 <div class="row" style="gap:14px">
@@ -82,9 +115,29 @@ footer{color:var(--muted)}
 <div class="keys" id="weak"><span class="muted">هتظهر بعد أول محاولة.</span></div>
 <div class="row" style="margin-top:12px"><button id="clear" class="danger">مسح السجل</button></div>
 </section>
-<footer>النتايج بتتحفظ في المتصفح بتاعك بس. <a href="https://github.com/abdalhadymahmoud9-crypto/typing-trainer">الكود على GitHub</a></footer>
+</div>
+<div id="pane-lessons" hidden>
+<section class="card">
+<div class="row" style="gap:14px"><span class="seg-label">اللغة</span><div class="seg"><button id="ll-ar" class="on">عربي</button><button id="ll-en">English</button></div>
+<span class="muted" id="ll-sum"></span></div>
+<p class="note">الدروس بتتعلّم مكان كل حرف على الكيبورد الحقيقي وأنهي صباع بيضغطه، لحد ما إيدك تحفظه من غير ما تبص. اللعبة على كيبورد الكمبيوتر. تقدر تتمرن على أماكن الحروف العربي حتى لو الكيبورد عندك إنجليزي.</p>
+<div class="lessons" id="lesson-list"></div>
+</section>
+<section class="card stage" id="stage">
+<div class="row" style="justify-content:space-between"><b id="st-title"></b><span class="muted" id="st-prog"></span><button id="st-exit">خروج</button></div>
+<div class="big" id="big"></div><div class="fing" id="fing"></div>
+<div class="ribbon" id="ribbon" aria-label="الحروف المطلوبة"></div>
+<div class="kb" id="kb" aria-hidden="true"></div>
+<div class="legend" id="legend" aria-hidden="true"></div>
+<div id="st-result" hidden class="grid" style="margin-top:14px"></div>
+<p class="note" id="st-msg">اضغط أي زر عشان تبدأ. ركّز على الحرف المنوّر، والغلطة بتتحسب ومبتتعداش.</p>
+</section>
+</div>
+<footer>النتايج بتتحفظ في المتصفح، ولو سجّلت بجوجل بتتحفظ على حسابك. <a href="https://github.com/abdalhadymahmoud9-crypto/typing-trainer">الكود على GitHub</a></footer>
 </main>
 <script src="logic.js"></script>
 <script src="app.js"></script>
+<script src="lessons.js"></script>
+<script type="module">import {initSync} from "./appsync.js";initSync({app:"typing",keys:["typing-trainer-history-v1","typing-trainer-lessons-v1"],authEl:document.getElementById("auth"),statusEl:document.getElementById("sync")});</script>
 </body>
 </html>

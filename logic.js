@@ -77,6 +77,123 @@
     return best;
   }
 
-  return { BANK: BANK, normalize: normalize, pickWords: pickWords, compareWord: compareWord,
+
+  // ---------- Touch-typing lessons (physical keyboard) ----------
+  var ROWS = [
+    ['KeyQ','KeyW','KeyE','KeyR','KeyT','KeyY','KeyU','KeyI','KeyO','KeyP','BracketLeft','BracketRight'],
+    ['KeyA','KeyS','KeyD','KeyF','KeyG','KeyH','KeyJ','KeyK','KeyL','Semicolon','Quote'],
+    ['KeyZ','KeyX','KeyC','KeyV','KeyB','KeyN','KeyM','Comma','Period','Slash']
+  ];
+  var LAYOUT = {
+    en: { KeyQ:'q',KeyW:'w',KeyE:'e',KeyR:'r',KeyT:'t',KeyY:'y',KeyU:'u',KeyI:'i',KeyO:'o',KeyP:'p',BracketLeft:'[',BracketRight:']',
+          KeyA:'a',KeyS:'s',KeyD:'d',KeyF:'f',KeyG:'g',KeyH:'h',KeyJ:'j',KeyK:'k',KeyL:'l',Semicolon:';',Quote:"'",
+          KeyZ:'z',KeyX:'x',KeyC:'c',KeyV:'v',KeyB:'b',KeyN:'n',KeyM:'m',Comma:',',Period:'.',Slash:'/' },
+    // Standard Arabic 101 layout, base (unshifted) characters.
+    ar: { KeyQ:'ض',KeyW:'ص',KeyE:'ث',KeyR:'ق',KeyT:'ف',KeyY:'غ',KeyU:'ع',KeyI:'ه',KeyO:'خ',KeyP:'ح',BracketLeft:'ج',BracketRight:'د',
+          KeyA:'ش',KeyS:'س',KeyD:'ي',KeyF:'ب',KeyG:'ل',KeyH:'ا',KeyJ:'ت',KeyK:'ن',KeyL:'م',Semicolon:'ك',Quote:'ط',
+          KeyZ:'ئ',KeyX:'ء',KeyC:'ؤ',KeyV:'ر',KeyB:'لا',KeyN:'ى',KeyM:'ة',Comma:'و',Period:'ز',Slash:'ظ' }
+  };
+  // finger ids: L5 = left pinky ... L2 = left index, R2 = right index ... R5 = right pinky
+  var FINGER = {
+    KeyQ:'L5',KeyA:'L5',KeyZ:'L5', KeyW:'L4',KeyS:'L4',KeyX:'L4', KeyE:'L3',KeyD:'L3',KeyC:'L3',
+    KeyR:'L2',KeyT:'L2',KeyF:'L2',KeyG:'L2',KeyV:'L2',KeyB:'L2',
+    KeyY:'R2',KeyU:'R2',KeyH:'R2',KeyJ:'R2',KeyN:'R2',KeyM:'R2',
+    KeyI:'R3',KeyK:'R3',Comma:'R3', KeyO:'R4',KeyL:'R4',Period:'R4',
+    KeyP:'R5',BracketLeft:'R5',BracketRight:'R5',Semicolon:'R5',Quote:'R5',Slash:'R5'
+  };
+  var FINGER_NAME = { L5:'خنصر الإيد الشمال', L4:'بنصر الإيد الشمال', L3:'وسطى الإيد الشمال', L2:'سبابة الإيد الشمال',
+                      R2:'سبابة الإيد اليمين', R3:'وسطى الإيد اليمين', R4:'بنصر الإيد اليمين', R5:'خنصر الإيد اليمين' };
+  var HOME = ['KeyA','KeyS','KeyD','KeyF','KeyJ','KeyK','KeyL','Semicolon'];
+
+  // Each lesson adds new keys on top of the previous ones. Keys are physical positions, so the same plan works for both languages.
+  var STEPS = [
+    { add: HOME, title: 'صف الأساس' },
+    { add: ['KeyG','KeyH'], title: 'السبابتين: G و H' },
+    { add: ['KeyE','KeyI'], title: 'الصف العلوي: E و I' },
+    { add: ['KeyR','KeyU'], title: 'R و U' },
+    { add: ['KeyT','KeyO'], title: 'T و O' },
+    { add: ['KeyY','KeyP'], title: 'Y و P' },
+    { add: ['KeyW','KeyQ'], title: 'W و Q' },
+    { add: ['KeyN','KeyM'], title: 'الصف السفلي: N و M' },
+    { add: ['KeyC','KeyV'], title: 'C و V' },
+    { add: ['KeyX','KeyZ','KeyB'], title: 'X و Z و B' },
+    { add: ['Comma','Period','Slash','Quote'], title: 'الفاصلة والنقطة و / و \'' },
+    { add: ['BracketLeft','BracketRight'], title: 'الأقواس [ ]' }
+  ];
+
+  function lessonKeys(idx) {
+    var out = [];
+    for (var i = 0; i <= idx && i < STEPS.length; i++) out = out.concat(STEPS[i].add);
+    return out;
+  }
+  function lessonCount() { return STEPS.length; }
+
+  // Practice text: pseudo-words of 2-5 keys, with the newly introduced keys appearing most often.
+  function makeLessonText(lang, idx, rand, wordsCount) {
+    rand = rand || Math.random; wordsCount = wordsCount || 10;
+    var all = lessonKeys(idx), fresh = STEPS[idx].add, map = LAYOUT[lang], words = [];
+    for (var w = 0; w < wordsCount; w++) {
+      var len = 2 + Math.floor(rand() * 4), word = '';
+      for (var i = 0; i < len; i++) {
+        var pool = (idx > 0 && rand() < 0.6) ? fresh : all;
+        word += map[pool[Math.floor(rand() * pool.length)]];
+      }
+      words.push(word);
+    }
+    return words.join(' ');
+  }
+
+  // Split practice text into tokens that each correspond to one key press (Arabic "لا" is one key).
+  function tokenize(lang, text) {
+    var map = LAYOUT[lang], multi = Object.keys(map).map(function (k) { return map[k]; }).filter(function (c) { return c.length > 1; });
+    var out = [], i = 0;
+    while (i < text.length) {
+      var m = multi.filter(function (c) { return text.substr(i, c.length) === c; })[0];
+      if (m) { out.push(m); i += m.length; } else { out.push(text[i]); i++; }
+    }
+    return out;
+  }
+  function codeForChar(lang, ch) {
+    if (ch === ' ') return 'Space';
+    var map = LAYOUT[lang];
+    for (var k in map) if (map[k] === ch) return k;
+    return null;
+  }
+  // A key press is right if it produces the expected character OR is the expected physical key.
+  // That lets people practise the Arabic positions even with an English layout switched on.
+  function isHit(lang, token, ev) {
+    if (token === ' ') return ev.key === ' ' || ev.code === 'Space';
+    return ev.key === token || ev.key.toLowerCase() === token || ev.code === codeForChar(lang, token);
+  }
+
+  function gradeLesson(totalKeys, mistakes, elapsedMs) {
+    var presses = totalKeys + mistakes;
+    var acc = presses ? Math.round((totalKeys / presses) * 100) : 0;
+    var wpm = Math.round((totalKeys / 5) / (Math.max(elapsedMs, 1) / 60000));
+    var stars = 0;
+    if (acc >= 95) stars = 1;
+    if (acc >= 98 && wpm >= 20) stars = 2;
+    if (acc >= 99 && wpm >= 30) stars = 3;
+    return { acc: acc, wpm: wpm, stars: stars, passed: stars >= 1 };
+  }
+
+  // progress: { ar: { "0": {stars, acc, wpm, tries} }, en: {...} }
+  function isUnlocked(progress, lang, idx) {
+    if (idx === 0) return true;
+    var p = progress && progress[lang] && progress[lang][String(idx - 1)];
+    return !!(p && p.stars >= 1);
+  }
+  function recordLesson(progress, lang, idx, result) {
+    var out = JSON.parse(JSON.stringify(progress || {}));
+    out[lang] = out[lang] || {};
+    var old = out[lang][String(idx)] || { stars: 0, acc: 0, wpm: 0, tries: 0 };
+    out[lang][String(idx)] = { stars: Math.max(old.stars, result.stars), acc: Math.max(old.acc, result.acc),
+                               wpm: Math.max(old.wpm, result.wpm), tries: old.tries + 1 };
+    return out;
+  }
+
+  return { ROWS: ROWS, LAYOUT: LAYOUT, FINGER: FINGER, FINGER_NAME: FINGER_NAME, HOME: HOME, STEPS: STEPS, lessonKeys: lessonKeys, lessonCount: lessonCount,
+           makeLessonText: makeLessonText, tokenize: tokenize, codeForChar: codeForChar, isHit: isHit, gradeLesson: gradeLesson,
+           isUnlocked: isUnlocked, recordLesson: recordLesson, BANK: BANK, normalize: normalize, pickWords: pickWords, compareWord: compareWord,
            summarize: summarize, weakKeys: weakKeys, bestWpm: bestWpm };
 });

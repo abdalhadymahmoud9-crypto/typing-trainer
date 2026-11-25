@@ -57,7 +57,7 @@
     var elapsed = Math.min(Date.now() - state.start, state.secs * 1000);
     var s = L.summarize(state.words, typed, elapsed);
     var h = load();
-    h.push({ t: Date.now(), lang: state.lang, secs: state.secs, wpm: s.wpm, acc: s.accuracy, badKeys: s.badKeys });
+    h.push({ id: Date.now() + '-' + Math.random().toString(36).slice(2, 6), t: Date.now(), lang: state.lang, secs: state.secs, wpm: s.wpm, acc: s.accuracy, badKeys: s.badKeys });
     save(h);
     $('input').disabled = true;
     $('r-wpm').textContent = s.wpm;
@@ -132,5 +132,6 @@
   $('clear').onclick = function () { if (confirm('تمسح كل السجل؟')) { save([]); drawStats(); } };
   $('input').addEventListener('input', onInput);
   window.addEventListener('resize', drawStats);
+  window.TT = { $: $ };
   reset(); drawStats();
 })();

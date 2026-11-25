@@ -50,3 +50,10 @@ test('manual completion unlocks everything, has no scores, never counts as an ex
   assert.equal(S.bestExam(s, 'en'), null); assert.equal(S.issueCertificate(s, 'en', 'x').error, 'no-pass'); assert.equal(S.highestPassed(s, 'ar'), 0);
   assert.equal(s.results.length, 1); assert.equal(S.markManual(s, 'en', 10).manual.length, 1); assert.equal(S.clean(JSON.parse(JSON.stringify(s))).manual.length, 1);
 });
+test('manual certificate: only for manual tracks, no scores, never an earned exam cert, one per track', function () {
+  assert.equal(S.issueManualCertificate(S.empty(), 'en', 'A').error, 'not-manual');
+  var s = S.markManual(S.empty(), 'en', 1), o = S.issueManualCertificate(s, 'en', 'Abdalhady', 5);
+  assert.ok(o.cert.manual); assert.equal(o.cert.wpm, undefined); assert.equal(o.cert.acc, undefined); assert.equal(S.issueManualCertificate(o.state, 'en', 'A').error, 'exists');
+  assert.equal(S.issueManualCertificate(s, 'en', '  ').error, 'no-name'); assert.equal(S.bestExam(o.state, 'en'), null); assert.equal(S.issueManualCertificate(o.state, 'ar', 'A').error, 'not-manual');
+  var e = S.addResult(s, 'en', 'exam', 0, { acc: 97, wpm: 31, complete: true }, 3).state; assert.equal(S.issueManualCertificate(e, 'en', 'A').error, 'has-exam');
+});

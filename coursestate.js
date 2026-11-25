@@ -81,10 +81,20 @@
     s.certs.push(cert);
     return { state: s, cert: cert };
   }
+  // A manually marked track can get a completion certificate that says so. It carries no scores and is not an exam result.
+  function issueManualCertificate(state, track, name, now, rand) {
+    var s = clean(state), nm = String(name || '').replace(/\s+/g, ' ').trim().slice(0, 60);
+    if (!isManual(s, track)) return { error: 'not-manual' };
+    if (bestExam(s, track)) return { error: 'has-exam' };
+    if (!nm) return { error: 'no-name' };
+    if (s.certs.some(function (c) { return c.track === track && c.manual; })) return { error: 'exists' };
+    var cert = { id: 'cert-manual-' + track, track: track, name: nm, manual: true, t: now || Date.now() };
+    s.certs.push(cert); return { state: s, cert: cert };
+  }
   function summary(state, track) {
     var s = clean(state), tr = s.results.filter(function (r) { return r.track === track; });
     return { highest: highestPassed(s, track), attempts: tr.length, examOpen: examOpen(s, track), exam: bestExam(s, track), certs: s.certs.filter(function (c) { return c.track === track; }).length, manual: isManual(s, track) };
   }
   return { KEY: KEY, RULES: RULES, EXAM: EXAM, STAGES: STAGES, empty: empty, clean: clean, addResult: addResult, highestPassed: highestPassed,
-           stageOpen: stageOpen, isManual: isManual, markManual: markManual, stepDone: stepDone, stepOpen: stepOpen, stepsDone: stepsDone, STEP_STAGE: STEP_STAGE, STEP_RULE: STEP_RULE, examOpen: examOpen, bestExam: bestExam, distinction: distinction, issueCertificate: issueCertificate, summary: summary };
+           stageOpen: stageOpen, isManual: isManual, markManual: markManual, stepDone: stepDone, stepOpen: stepOpen, stepsDone: stepsDone, STEP_STAGE: STEP_STAGE, STEP_RULE: STEP_RULE, examOpen: examOpen, bestExam: bestExam, distinction: distinction, issueCertificate: issueCertificate, issueManualCertificate: issueManualCertificate, summary: summary };
 });

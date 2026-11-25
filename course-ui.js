@@ -67,14 +67,14 @@
     $('c-sum').textContent = (sum.manual ? 'المسار ده معلّم مكتمل يدوي من صاحب الحساب (من غير درجات). ' : '') + 'وصلت للمرحلة ' + sum.highest + ' من ' + S.STAGES + ' · محاولات: ' + sum.attempts;
     var ch = $('c-certs'); ch.innerHTML = '';
     s.certs.filter(function (c) { return c.track === track; }).forEach(function (c) {
-      var b = document.createElement('button'); b.textContent = 'شهادة ' + c.name + ' (' + new Date(c.t).toLocaleDateString('ar-EG') + ')'; b.onclick = function () { drawCert(c); }; ch.appendChild(b);
+      var b = document.createElement('button'); b.textContent = (c.manual ? 'شهادة إتمام يدوي ' : 'شهادة ') + c.name + ' (' + new Date(c.t).toLocaleDateString('ar-EG') + ')'; b.onclick = function () { drawCert(c); }; ch.appendChild(b);
     });
   }
 
   function openStage(i) {
     stage = i; $('c-play').classList.remove('on'); $('c-info').hidden = false; $('c-cert').hidden = true; $('c-info').scrollIntoView({ block: 'nearest' });
-    var s = load();
-    if (i === 8) { $('c-title').textContent = 'الاختبار النهائي'; $('c-intro').textContent = 'نص ما اتدرّبتش عليه (٤٠٠ حرف تقريباً أو أكتر، مفيش مؤقت: السرعة بتتحسب من أول ضغطة لآخر ضغطة). ' + B.CONTENT[track].exam.length + ' نصوص مختلفة في المسار ده، فهتتكرر بعد كام محاولة. للعدّي: دقة ٩٦٪ وسرعة ٣٠ ك/د على الأقل، ٩٨٪ و٤٥ للتميّز. الأرقام دي معايير اخترتها للتطبيق ومش معتمدة من جهة خارجية' + (track === 'ar' ? '، وفي العربي لسه مبدئية.' : '.') + ' تقدر تعيد من غير حد أقصى وأفضل نتيجة هي اللي بتتحسب. بتتقيّم على الحرف اللي بيطلع.'; $('c-drill').hidden = true; $('c-test').textContent = 'ابدأ الاختبار النهائي'; $('c-test').hidden = false; return; }
+    var s = load(); $('c-name-row').hidden = true;
+    if (i === 8) { $('c-name-row').hidden = !(S.isManual(s, track) || S.bestExam(s, track)); if (S.isManual(s, track) && !S.bestExam(s, track)) $('c-note').textContent = 'المسار ده معلّم مكتمل يدويًا. تقدر تطلّع شهادة إتمام يدوي مكتوب عليها كده صراحة، من غير نتيجة اختبار. أو تعدّي الاختبار فعلًا وتاخد الشهادة العادية.'; $('c-title').textContent = 'الاختبار النهائي'; $('c-intro').textContent = 'نص ما اتدرّبتش عليه (٤٠٠ حرف تقريباً أو أكتر، مفيش مؤقت: السرعة بتتحسب من أول ضغطة لآخر ضغطة). ' + B.CONTENT[track].exam.length + ' نصوص مختلفة في المسار ده، فهتتكرر بعد كام محاولة. للعدّي: دقة ٩٦٪ وسرعة ٣٠ ك/د على الأقل، ٩٨٪ و٤٥ للتميّز. الأرقام دي معايير اخترتها للتطبيق ومش معتمدة من جهة خارجية' + (track === 'ar' ? '، وفي العربي لسه مبدئية.' : '.') + ' تقدر تعيد من غير حد أقصى وأفضل نتيجة هي اللي بتتحسب. بتتقيّم على الحرف اللي بيطلع.'; $('c-drill').hidden = true; $('c-test').textContent = 'ابدأ الاختبار النهائي'; $('c-test').hidden = false; return; }
     $('c-title').textContent = (i === 0 ? '' : 'مرحلة ' + i + ': ') + TITLES[i]; $('c-intro').textContent = INTRO[i] || '';
     renderSteps(i);
     if (i === 0) { $('c-drill').hidden = true; $('c-test').hidden = true; $('c-review').hidden = true; $('c-weak').hidden = true; return; }
@@ -169,13 +169,20 @@
     var cv = $('c-canvas'), x = cv.getContext('2d'), W = cv.width = 1400, H = cv.height = 900;
     x.fillStyle = '#fbf8ff'; x.fillRect(0, 0, W, H); x.strokeStyle = '#7c3aed'; x.lineWidth = 10; x.strokeRect(30, 30, W - 60, H - 60); x.lineWidth = 2; x.strokeRect(52, 52, W - 104, H - 104);
     x.textAlign = 'center'; x.direction = c.track === 'ar' ? 'rtl' : 'ltr'; x.fillStyle = '#2a1458';
-    var ar = c.track === 'ar'; x.font = '700 64px "Segoe UI",Tahoma,Arial'; x.fillText(ar ? 'شهادة إتمام كورس الكتابة' : 'Typing Course Completion', W / 2, 190);
+    var ar = c.track === 'ar'; x.font = '700 64px "Segoe UI",Tahoma,Arial'; x.fillText(c.manual ? (ar ? 'شهادة إتمام يدوي لكورس الكتابة' : 'Manual Completion: Typing Course') : (ar ? 'شهادة إتمام كورس الكتابة' : 'Typing Course Completion'), W / 2, 190);
     x.font = '30px "Segoe UI",Tahoma,Arial'; x.fillStyle = '#5b4a85'; x.fillText(ar ? 'بتفيد إن' : 'This records that', W / 2, 290);
     x.fillStyle = '#6d28d9'; x.font = '700 80px "Segoe UI",Tahoma,Arial'; x.fillText(c.name, W / 2, 400);
+    if (c.manual) {
+      x.fillStyle = '#2a1458'; x.font = '34px "Segoe UI",Tahoma,Arial';
+      x.fillText(ar ? 'اتعلّم مسار الكتابة العربي مكتمل يدويًا من صاحب الحساب' : 'The English typing track was marked complete by the account owner', W / 2, 490);
+      x.fillStyle = '#b45309'; x.font = '700 30px "Segoe UI",Tahoma,Arial';
+      x.fillText(ar ? 'من غير اختبار نهائي، ومن غير نتيجة سرعة أو دقة.' : 'No final exam was taken, and there is no speed or accuracy result.', W / 2, 560);
+    } else {
     x.fillStyle = '#2a1458'; x.font = '34px "Segoe UI",Tahoma,Arial';
     x.fillText(ar ? 'خلّص كورس الكتابة العربي في تطبيق مدرّب الكتابة' + (c.distinction ? ' بتميّز' : '') : 'completed the English typing course in the Typing Trainer app' + (c.distinction ? ' with distinction' : ''), W / 2, 490);
     var sm = !!c.sample, pv = function (v, u) { return sm ? '--' + (u || '') : v + (u || ''); };
     x.fillText((ar ? 'الاختبار النهائي: ' : 'Final test: ') + pv(c.wpm) + (ar ? ' كلمة/د · دقة ' : ' WPM · accuracy ') + pv(c.acc, '%') + ' · ' + (ar ? 'ثبات ' : 'consistency ') + pv(c.cons), W / 2, 560);
+    }
     x.fillStyle = '#5b4a85'; x.font = '26px "Segoe UI",Tahoma,Arial'; x.fillText(c.sample ? (ar ? 'التاريخ: --' : 'Date: --') : new Date(c.t).toLocaleDateString(ar ? 'ar-EG' : 'en-GB', { year: 'numeric', month: 'long', day: 'numeric' }), W / 2, 630);
     if (c.sample) { x.save(); x.translate(W / 2, H / 2); x.rotate(-0.35); x.font = '700 110px "Segoe UI",Tahoma,Arial'; x.fillStyle = 'rgba(220,38,38,0.16)'; x.direction = 'rtl'; x.fillText('نموذج للمعاينة فقط', 0, 0); x.restore(); x.direction = ar ? 'rtl' : 'ltr'; x.fillStyle = '#b91c1c'; x.font = '700 26px "Segoe UI",Tahoma,Arial'; x.fillText('معاينة شكل الشهادة: مش شهادة حقيقية، والنتيجة والتاريخ لسه ما اتكتبوش.', W / 2, 110); }
     x.font = '22px "Segoe UI",Tahoma,Arial'; x.fillStyle = '#6b5d8f';
@@ -196,7 +203,7 @@
   $('c-test').onclick = function () { begin(stage === 8 ? 'exam' : 'test'); };
   $('c-exit').onclick = function () { mode = null; $('c-play').classList.remove('on'); $('c-info').hidden = false; };
   $('c-issue').onclick = function () {
-    var out = S.issueCertificate(load(), track, $('c-name').value); if (out.error) { $('c-note').textContent = out.error === 'no-name' ? 'اكتب اسمك الأول.' : 'لازم تعدّي الاختبار النهائي الأول.'; return; }
+    var st0 = load(), out = S.bestExam(st0, track) || !S.isManual(st0, track) ? S.issueCertificate(st0, track, $('c-name').value) : S.issueManualCertificate(st0, track, $('c-name').value); if (out.error) { $('c-note').textContent = out.error === 'no-name' ? 'اكتب اسمك الأول.' : (out.error === 'exists' ? 'شهادة الإتمام اليدوي اتطلّعت قبل كده، هتلاقيها تحت.' : 'لازم تعدّي الاختبار النهائي الأول.'); return; }
     save(out.state); drawCert(out.cert); renderMap();
   };
   $('c-dl').onclick = function () { $('c-canvas').toBlob(function (b) { var a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = 'typing-certificate.png'; a.click(); }); };

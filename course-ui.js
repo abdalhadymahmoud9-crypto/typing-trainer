@@ -26,7 +26,7 @@
     if (kind === 'exam') { examIdx = Math.floor(Math.random() * B.CONTENT[lang].exam.length); return B.CONTENT[lang].exam[examIdx]; }
     if (st === 7) return B.CONTENT[lang].s7.paragraphs[Math.floor(Math.random() * 3)];
     var p = pool(lang, st);
-    if (kind === 'drill') return pick(p.words, 10).join(' ') + ' ' + pick(p.sentences, 1)[0];
+    if (kind === 'drill') return pick(p.words, 24).join(' ') + ' ' + pick(p.sentences, 3).join(' ');
     return pick(p.sentences, 3).join(' '); // stage test
   }
   function expect(ch) { // stages 1-3 are scored by physical key; 4+ by the character produced
@@ -60,8 +60,9 @@
   function openStage(i) {
     stage = i; $('c-play').classList.remove('on'); $('c-info').hidden = false; $('c-cert').hidden = true; $('c-info').scrollIntoView({ block: 'nearest' });
     var s = load();
-    if (i === 8) { $('c-title').textContent = 'الاختبار النهائي'; $('c-intro').textContent = 'نص ما اتدرّبتش عليه. للعدّي: دقة ٩٦٪ وسرعة ٣٠ ك/د على الأقل، ٩٨٪ و٤٥ للتميّز. الأرقام دي معايير اخترتها للتطبيق ومش معتمدة من جهة خارجية' + (track === 'ar' ? '، وفي العربي لسه مبدئية.' : '.') + ' تقدر تعيد من غير حد أقصى وأفضل نتيجة هي اللي بتتحسب. بتتقيّم على الحرف اللي بيطلع.'; $('c-drill').hidden = true; $('c-test').textContent = 'ابدأ الاختبار النهائي'; $('c-test').hidden = false; return; }
+    if (i === 8) { $('c-title').textContent = 'الاختبار النهائي'; $('c-intro').textContent = 'نص ما اتدرّبتش عليه (٤٠٠ حرف تقريباً أو أكتر، مفيش مؤقت: السرعة بتتحسب من أول ضغطة لآخر ضغطة). فيه نصّين بس لكل مسار فهيتكرروا بعد كام محاولة. للعدّي: دقة ٩٦٪ وسرعة ٣٠ ك/د على الأقل، ٩٨٪ و٤٥ للتميّز. الأرقام دي معايير اخترتها للتطبيق ومش معتمدة من جهة خارجية' + (track === 'ar' ? '، وفي العربي لسه مبدئية.' : '.') + ' تقدر تعيد من غير حد أقصى وأفضل نتيجة هي اللي بتتحسب. بتتقيّم على الحرف اللي بيطلع.'; $('c-drill').hidden = true; $('c-test').textContent = 'ابدأ الاختبار النهائي'; $('c-test').hidden = false; return; }
     $('c-title').textContent = (i === 0 ? '' : 'مرحلة ' + i + ': ') + TITLES[i]; $('c-intro').textContent = INTRO[i] || '';
+    if (i >= 1 && i <= 3) $('c-intro').textContent += ' لو لسه بتتعلم أماكن الحروف حرف حرف، ابدأ بتبويب دروس الأصابع (١٢ درس، كل واحد بيضيف حروف جديدة) وبعدين ارجع هنا.';
     if (i === 0) { $('c-drill').hidden = true; $('c-test').hidden = true; return; }
     var r = S.RULES[i]; $('c-intro').textContent += ' شرط العدّي: دقة ' + r.minAcc + '٪ وسرعة ' + r.minWpm + ' ك/د على الأقل (معيار للتطبيق مش معتمد من جهة خارجية).';
     $('c-drill').hidden = false; $('c-test').hidden = false; $('c-test').textContent = S.stageOpen(s, track, i - 1) || i === 1 ? 'اختبار المرحلة' : 'اختبار المرحلة (اختبار مباشر)';

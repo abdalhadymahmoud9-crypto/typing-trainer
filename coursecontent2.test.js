@@ -7,3 +7,12 @@ test('enough text per stage', function () {
     C.CONTENT[l].exam.forEach(function (t) { assert.ok(t.length >= 400, l + ' exam length ' + t.length); });
   });
 });
+test('drill pools are deep enough for 24 distinct words per stage (cumulative)', function () {
+  var A = require('./coursecontent.js');
+  ['en', 'ar'].forEach(function (l) {
+    var words = [];
+    for (var s = 1; s <= 3; s++) words = words.concat(A.CONTENT[l]['s' + s].words);
+    assert.ok(new Set(words).size >= 24, l + ' stage1-3 pool ' + new Set(words).size);
+    for (var k = 4; k <= 6; k++) { words = words.concat(C.CONTENT[l]['s' + k].words); assert.ok(new Set(words).size >= 60, l + ' stage ' + k); }
+  });
+});

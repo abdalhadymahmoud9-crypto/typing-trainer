@@ -10,12 +10,13 @@
   function save(p) { try { localStorage.setItem(KEY, JSON.stringify(p)); } catch (e) {} }
 
   function showTab(name) {
-    $('pane-test').hidden = name !== 'test'; $('pane-lessons').hidden = name !== 'lessons';
-    $('tab-test').classList.toggle('on', name === 'test'); $('tab-lessons').classList.toggle('on', name === 'lessons');
+    $('pane-test').hidden = name !== 'test'; $('pane-lessons').hidden = name !== 'lessons'; $('pane-course').hidden = name !== 'course';
+    $('tab-test').classList.toggle('on', name === 'test'); $('tab-lessons').classList.toggle('on', name === 'lessons'); $('tab-course').classList.toggle('on', name === 'course');
     if (name === 'lessons') renderList(); else if (active) exitLesson();
   }
   $('tab-test').onclick = function () { showTab('test'); };
   $('tab-lessons').onclick = function () { showTab('lessons'); };
+  $('tab-course').onclick = function () { showTab('course'); };
   $('ll-ar').onclick = function () { lang = 'ar'; $('ll-ar').classList.add('on'); $('ll-en').classList.remove('on'); exitLesson(); renderList(); };
   $('ll-en').onclick = function () { lang = 'en'; $('ll-en').classList.add('on'); $('ll-ar').classList.remove('on'); exitLesson(); renderList(); };
 

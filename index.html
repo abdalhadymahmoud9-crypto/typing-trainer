@@ -69,14 +69,17 @@ footer{color:var(--muted)}
 .space{width:clamp(160px,42vw,330px)}
 .legend{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;font-size:.8rem;color:var(--muted)}
 .legend i{display:inline-block;width:12px;height:12px;border-radius:4px;vertical-align:middle;margin-inline-end:4px}
+.shake{animation:sh .15s}@keyframes sh{25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
+.ribbon .bad{color:#ff8aa5;text-decoration:underline}
 .note{color:var(--muted);font-size:.88rem;margin:8px 0 0}
+@media(max-width:520px){.kb{gap:4px}.kbrow{gap:3px}.kbrow:nth-child(2){margin-inline-start:0;padding-inline-start:8px}.kbrow:nth-child(3){padding-inline-start:20px;margin-inline-start:0}.key{width:6.2vw;min-width:21px;height:8vw;min-height:30px;border-width:1.5px;border-radius:6px}.space{width:50vw}.big{font-size:3.4rem}.ribbon span{font-size:1.2rem;padding:1px 4px}.lessons{grid-template-columns:repeat(2,1fr)}.syncbar{font-size:.85rem}}
 </style>
 </head>
 <body>
 <main class="wrap">
 <header class="hero"><img class="logo" src="logo.svg" alt=""><div><h1>مدرّب الكتابة</h1><p>اكتب أسرع وبدقة أعلى، بالعربي أو الإنجليزي</p></div></header>
 <div class="syncbar"><span id="auth"></span><span id="sync"></span></div>
-<nav class="tabs" aria-label="الأقسام"><button id="tab-test" class="on">اختبار السرعة</button><button id="tab-lessons">دروس الأصابع</button></nav>
+<nav class="tabs" aria-label="الأقسام"><button id="tab-test" class="on">اختبار السرعة</button><button id="tab-lessons">دروس الأصابع</button><button id="tab-course">الكورس الكامل</button></nav>
 <div id="pane-test">
 
 <section class="card" aria-label="الإعدادات">
@@ -133,11 +136,41 @@ footer{color:var(--muted)}
 <p class="note" id="st-msg">اضغط أي زر عشان تبدأ. ركّز على الحرف المنوّر، والغلطة بتتحسب ومبتتعداش.</p>
 </section>
 </div>
+<div id="pane-course" hidden>
+<section class="card">
+<div class="row" style="gap:14px"><span class="seg-label">المسار</span><div class="seg"><button id="ct-ar" class="on">عربي</button><button id="ct-en">English</button></div><span class="muted" id="c-sum"></span></div>
+<p class="note">كورس من الصفر لحد اختبار نهائي وشهادة إتمام. بيعلّمك الأساس، والسرعة بتيجي بالتمرين المستمر بعد كده. كل مرحلة ليها اختبار، ولو عارف المرحلة تقدر تعدّي اختبارها على طول. التقدّم بيتحفظ على حسابك لو سجّلت بجوجل. الكورس مخصوص لكيبورد الكمبيوتر، والكيبورد اللي على الموبايل مش مدعوم فيه.</p>
+<div class="lessons" id="c-map"></div>
+<div class="row" id="c-certs" style="margin-top:12px"></div>
+</section>
+<section class="card" id="c-info" hidden>
+<h2 id="c-title"></h2><p id="c-intro"></p>
+<div class="row"><button id="c-drill" class="primary">تمرين</button><button id="c-test">اختبار المرحلة</button></div>
+<div id="c-result" class="grid" style="margin-top:14px" hidden></div>
+<p class="note" id="c-note"></p>
+<div class="row" id="c-name-row" hidden><input id="c-name" type="text" maxlength="60" placeholder="اسمك زي ما تحب يظهر في الشهادة"><button id="c-issue" class="primary">اطلّع الشهادة</button></div>
+<details class="note"><summary>إزاي بتتحسب النتيجة</summary><p>السرعة الصافية = (الحروف الصح في النص النهائي ÷ ٥) ÷ الدقايق من أول ضغطة لآخر ضغطة، والوقفات محسوبة. الدقة = الحروف الصح ÷ (الحروف المكتوبة + الغلطات اللي صحّحتها). الثبات معلومة بس ومبيمنعش حد من العدّي. المراحل ١ لـ ٣ بتتقيّم على مكان الزرار الفعلي، وبعد كده على الحرف اللي بيطلع.</p></details>
+</section>
+<section class="card stage" id="c-play">
+<div class="row" style="justify-content:space-between"><span class="muted" id="c-prog"></span><button id="c-exit">خروج</button></div>
+<div class="ribbon" id="c-ribbon" aria-label="النص المطلوب"></div>
+<p class="note" id="c-msg"></p>
+</section>
+<section class="card" id="c-cert" hidden>
+<canvas id="c-canvas" width="1400" height="900" role="img" aria-label="الشهادة" style="height:auto"></canvas>
+<div class="row" style="margin-top:10px"><button id="c-dl" class="primary">نزّل الصورة</button></div>
+</section>
+</div>
 <footer>النتايج بتتحفظ في المتصفح، ولو سجّلت بجوجل بتتحفظ على حسابك. <a href="https://github.com/abdalhadymahmoud9-crypto/typing-trainer">الكود على GitHub</a></footer>
 </main>
 <script src="logic.js"></script>
 <script src="app.js"></script>
 <script src="lessons.js"></script>
-<script type="module">import {initSync} from "./appsync.js";initSync({app:"typing",keys:["typing-trainer-history-v1","typing-trainer-lessons-v1"],authEl:document.getElementById("auth"),statusEl:document.getElementById("sync")});</script>
+<script src="course.js"></script>
+<script src="coursecontent.js"></script>
+<script src="coursecontent2.js"></script>
+<script src="coursestate.js"></script>
+<script src="course-ui.js"></script>
+<script type="module">import {initSync} from "./appsync.js";initSync({app:"typing",keys:["typing-trainer-history-v1","typing-trainer-lessons-v1","typing-trainer-course-v1"],authEl:document.getElementById("auth"),statusEl:document.getElementById("sync")});</script>
 </body>
 </html>

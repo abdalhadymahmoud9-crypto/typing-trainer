@@ -66,11 +66,15 @@ test('new keys dominate a lesson after the first', () => {
 test('tokenize keeps the Arabic lam-alef key as one token', () => {
   assert.deepStrictEqual(L.tokenize('ar', 'بلا ب'), ['ب', 'لا', ' ', 'ب']);
 });
-test('isHit accepts the character or the physical key', () => {
+test('isHit judges the physical key; character only as fallback when no code', () => {
   assert.ok(L.isHit('ar', 'ش', { key: 'ش', code: 'KeyA' }));
   assert.ok(L.isHit('ar', 'ش', { key: 'a', code: 'KeyA' }));
   assert.ok(!L.isHit('ar', 'ش', { key: 's', code: 'KeyS' }));
   assert.ok(L.isHit('en', 'a', { key: 'A', code: 'KeyA' }));
+  assert.ok(!L.isHit('en', 'a', { key: 'a', code: 'KeyS' }), 'right character from the wrong physical key must not count');
+  assert.ok(!L.isHit('ar', 'ش', { key: 'ش', code: 'KeyS' }));
+  assert.ok(L.isHit('ar', 'ش', { key: 'ش', code: '' }));
+  assert.ok(!L.isHit('ar', 'ش', { key: 'س', code: '' }));
   assert.ok(L.isHit('en', ' ', { key: ' ', code: 'Space' }));
 });
 test('gradeLesson stars and pass threshold', () => {

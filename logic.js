@@ -159,11 +159,14 @@
     for (var k in map) if (map[k] === ch) return k;
     return null;
   }
-  // A key press is right if it produces the expected character OR is the expected physical key.
-  // That lets people practise the Arabic positions even with an English layout switched on.
+  // Lessons train muscle memory, so the PHYSICAL key is what counts (KeyboardEvent.code).
+  // The typed character is only used as a fallback when the browser gives no physical code (some virtual keyboards).
+  // A character produced by a different key (another layout, a remap) is not accepted.
   function isHit(lang, token, ev) {
-    if (token === ' ') return ev.key === ' ' || ev.code === 'Space';
-    return ev.key === token || ev.key.toLowerCase() === token || ev.code === codeForChar(lang, token);
+    var want = codeForChar(lang, token);
+    if (ev.code && ev.code !== 'Unidentified') return ev.code === want;
+    if (token === ' ') return ev.key === ' ';
+    return ev.key === token || String(ev.key).toLowerCase() === token;
   }
 
   function gradeLesson(totalKeys, mistakes, elapsedMs) {

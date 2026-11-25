@@ -91,3 +91,8 @@ test('unlocking and recording lesson progress', () => {
   p = L.recordLesson(p, 'en', 0, { stars: 1, acc: 96, wpm: 30 });
   assert.deepStrictEqual(p.en['0'], { stars: 2, acc: 98, wpm: 30, tries: 2 });
 });
+
+test('recordLesson survives an empty or partial saved record', () => {
+  const p = L.recordLesson({ ar: { 0: {} } }, 'ar', 0, { stars: 2, acc: 98, wpm: 25 });
+  assert.deepStrictEqual(p.ar['0'], { stars: 2, acc: 98, wpm: 25, tries: 1 });
+});

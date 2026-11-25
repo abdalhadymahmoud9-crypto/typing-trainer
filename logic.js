@@ -189,7 +189,9 @@
   function recordLesson(progress, lang, idx, result) {
     var out = JSON.parse(JSON.stringify(progress || {}));
     out[lang] = out[lang] || {};
-    var old = out[lang][String(idx)] || { stars: 0, acc: 0, wpm: 0, tries: 0 };
+    var o = out[lang][String(idx)] || {};
+    var n = function (v) { return typeof v === 'number' && isFinite(v) ? v : 0; };
+    var old = { stars: n(o.stars), acc: n(o.acc), wpm: n(o.wpm), tries: n(o.tries) };
     out[lang][String(idx)] = { stars: Math.max(old.stars, result.stars), acc: Math.max(old.acc, result.acc),
                                wpm: Math.max(old.wpm, result.wpm), tries: old.tries + 1 };
     return out;

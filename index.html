@@ -145,7 +145,8 @@ footer{color:var(--muted)}
 </section>
 <section class="card" id="c-info" hidden>
 <h2 id="c-title"></h2><p id="c-intro"></p>
-<div class="row"><button id="c-drill" class="primary">تمرين</button><button id="c-test">اختبار المرحلة</button></div>
+<div id="c-steps" class="lessons" style="margin:10px 0"></div>
+<div class="row"><button id="c-review">مراجعة سريعة</button><button id="c-drill" class="primary">تمرين حر</button><button id="c-weak">تدريب على حروفك الضعيفة</button><button id="c-test">اختبار المرحلة</button></div>
 <div id="c-result" class="grid" style="margin-top:14px" hidden></div>
 <p class="note" id="c-note"></p>
 <div class="row" id="c-name-row" hidden><input id="c-name" type="text" maxlength="60" placeholder="اسمك زي ما تحب يظهر في الشهادة"><button id="c-issue" class="primary">اطلّع الشهادة</button></div>
@@ -169,6 +170,7 @@ footer{color:var(--muted)}
 <script src="course.js"></script>
 <script src="coursecontent.js"></script>
 <script src="coursecontent2.js"></script>
+<script src="coursegen.js"></script>
 <script src="coursestate.js"></script>
 <script src="course-ui.js"></script>
 <script type="module">import {initSync} from "./appsync.js";initSync({app:"typing",keys:["typing-trainer-history-v1","typing-trainer-lessons-v1","typing-trainer-course-v1"],authEl:document.getElementById("auth"),statusEl:document.getElementById("sync")});</script>

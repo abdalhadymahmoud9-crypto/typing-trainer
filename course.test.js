@@ -49,3 +49,13 @@ test('Arabic lam-alef: ligature key B and lam+alef both give a correct result', 
   var viaTwo = C.score('سلام', [{ t: 0, type: 'key', ch: 'س', code: 'KeyS' }, { t: 100, type: 'key', ch: 'ل', code: 'KeyG' }, { t: 200, type: 'key', ch: 'ا', code: 'KeyH' }, { t: 300, type: 'key', ch: 'م', code: 'KeyL' }], ar);
   assert.equal(viaB.correct, 4); assert.equal(viaTwo.correct, 4); assert.equal(viaB.acc, 100);
 });
+test('drill: wrong presses are attempts that do not advance and lower accuracy; per-key stats are recorded', function () {
+  var ev = [{ t: 0, type: 'key', ch: 'a', code: 'KeyA' }, { t: 300, type: 'key', ch: 'x', code: 'KeyX', bad: true }, { t: 600, type: 'key', ch: 'b', code: 'KeyB' }, { t: 900, type: 'key', ch: 'x', code: 'KeyX', bad: true }, { t: 1200, type: 'key', ch: 'b', code: 'KeyB' }];
+  var r = C.score('abb', ev, cf);
+  assert.equal(r.correct, 3); assert.equal(r.bad, 2); assert.equal(r.acc, 60); assert.ok(r.complete);
+  assert.deepEqual(r.perKey.KeyB.slice(0, 2), [4, 2]); assert.equal(r.perKey.KeyA[0], 1);
+});
+test('per-key stats attribute a wrong key to the key that was expected', function () {
+  var r = C.score('ab', [{ t: 0, type: 'key', ch: 'a', code: 'KeyA' }, { t: 200, type: 'key', ch: 'z', code: 'KeyZ' }], cf);
+  assert.deepEqual(r.perKey.KeyB.slice(0, 2), [1, 1]);
+});

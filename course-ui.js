@@ -1,8 +1,8 @@
 (function () {
   'use strict';
-  var L = window.TypingLogic, C = window.TypingCourse, S = window.TypingCourseState, A = window.TypingCourseContent, B = window.TypingCourseContent2;
+  var G = window.TypingCourseGen, L = window.TypingLogic, C = window.TypingCourse, S = window.TypingCourseState, A = window.TypingCourseContent, B = window.TypingCourseContent2;
   var $ = function (id) { return document.getElementById(id); };
-  var track = 'ar', mode = null, stage = 0, target = '', events = [], typed = [], startedAt = 0, examIdx = 0, rejected = 0;
+  var stepIdx = -1, track = 'ar', mode = null, stage = 0, target = '', events = [], typed = [], startedAt = 0, examIdx = 0, rejected = 0;
   var TITLES = { 0: 'قبل ما تبدأ', 1: 'صف الأساس', 2: 'الصف العلوي', 3: 'الصف السفلي وحروف الأطراف', 4: 'Shift وعلامات الترقيم والأرقام', 5: 'كلمات وجمل بطلاقة', 6: 'بناء السرعة', 7: 'نص حقيقي طويل' };
   var INTRO = {
     0: 'اقعد معتدل، ضهرك مسنود، ورسغك مرتاح مش مسنود على الترابيزة. حط صوابعك على صف الأساس (الإنجليزي: A S D F و J K L ;). الصوابع الاتنين اللي ماسكين F و J فيهم نتوءة صغيرة تحسّك مكانك من غير ما تبص. المرحلة دي مفيهاش اختبار.',
@@ -21,8 +21,22 @@
     return out;
   }
   function pick(arr, n) { var a = arr.slice(), o = []; while (a.length && o.length < n) o.push(a.splice(Math.floor(Math.random() * a.length), 1)[0]); return o; }
+  function isDrill(m) { return m === 'drill' || m === 'step' || m === 'review' || m === 'weak'; }
+  function unlockedNow(s) {
+    if (S.highestPassed(s, track) >= 3) return G.unlocked(G.STEPS.length - 1);
+    var last = -1; G.STEPS.forEach(function (x, i) { if (S.stepDone(s, track, i) || (S.highestPassed(s, track) >= x.stage)) last = i; });
+    return G.unlocked(Math.max(last, 0));
+  }
   function textFor(kind, st) {
-    var lang = track;
+    var lang = track, s0 = load();
+    if (kind === 'step') return G.stepLesson(lang, stepIdx).text;
+    if (kind === 'review') { var rv = st <= 3 ? G.review(lang, st) : pick(pool(lang, st - 1).words, 18).join(' '); return rv || pick(pool(lang, Math.max(st, 1)).words, 16).join(' '); }
+    if (kind === 'weak') {
+      var wt = G.adaptive(lang, G.weakKeys(s0.results, track, 3), unlockedNow(s0));
+      if (wt.trim().split(/\s+/).length >= 6) return wt;
+      var li = 0; G.STEPS.forEach(function (x, i) { if (S.stepDone(s0, track, i)) li = i; }); // too few real words with the keys so far: repeat the latest step instead
+      return G.stepLesson(lang, li).text;
+    }
     if (kind === 'exam') { examIdx = Math.floor(Math.random() * B.CONTENT[lang].exam.length); return B.CONTENT[lang].exam[examIdx]; }
     if (st === 7) return B.CONTENT[lang].s7.paragraphs[Math.floor(Math.random() * 3)];
     var p = pool(lang, st);
@@ -43,14 +57,14 @@
       var best = null; s.results.forEach(function (r) { if (r.track === track && r.kind === 'stage' && r.ref === i && r.passed && (!best || r.wpm > best.wpm)) best = r; });
       b.innerHTML = '<b>' + (i === 0 ? 'تمهيد' : 'مرحلة ' + i) + '</b>';
       var t = document.createElement('span'); t.textContent = TITLES[i]; b.appendChild(t);
-      var st = document.createElement('div'); st.className = 'st'; st.textContent = i === 0 ? 'بدون اختبار' : (best ? '✓ ' + best.acc + '% · ' + best.wpm : (open ? 'مفتوحة' : 'مقفولة'));
+      var st = document.createElement('div'); st.className = 'st'; st.textContent = i === 0 ? 'بدون اختبار' : (best ? '✓ ' + best.acc + '% · ' + best.wpm : (sum.manual ? '✓ مكتمل يدوي' : (open ? 'مفتوحة' : 'مقفولة')));
       b.appendChild(st); b.onclick = function () { openStage(i); }; box.appendChild(b);
     })(i);
     var ex = document.createElement('button'); ex.className = 'les'; ex.disabled = !sum.examOpen; ex.innerHTML = '<b>الاختبار النهائي</b>';
     var et = document.createElement('span'); et.textContent = 'نص جديد، شهادة لو عدّيت'; ex.appendChild(et);
-    var es = document.createElement('div'); es.className = 'st'; es.textContent = sum.exam ? '✓ ' + sum.exam.acc + '% · ' + sum.exam.wpm : (sum.examOpen ? 'مفتوح' : 'مقفول'); ex.appendChild(es);
+    var es = document.createElement('div'); es.className = 'st'; es.textContent = sum.exam ? '✓ ' + sum.exam.acc + '% · ' + sum.exam.wpm : (sum.manual ? 'مفتوح (المسار معلّم مكتمل يدوي، من غير نتيجة)' : (sum.examOpen ? 'مفتوح' : 'مقفول')); ex.appendChild(es);
     ex.onclick = function () { openStage(8); }; box.appendChild(ex);
-    $('c-sum').textContent = 'وصلت للمرحلة ' + sum.highest + ' من ' + S.STAGES + ' · محاولات: ' + sum.attempts;
+    $('c-sum').textContent = (sum.manual ? 'المسار ده معلّم مكتمل يدوي من صاحب الحساب (من غير درجات). ' : '') + 'وصلت للمرحلة ' + sum.highest + ' من ' + S.STAGES + ' · محاولات: ' + sum.attempts;
     var ch = $('c-certs'); ch.innerHTML = '';
     s.certs.filter(function (c) { return c.track === track; }).forEach(function (c) {
       var b = document.createElement('button'); b.textContent = 'شهادة ' + c.name + ' (' + new Date(c.t).toLocaleDateString('ar-EG') + ')'; b.onclick = function () { drawCert(c); }; ch.appendChild(b);
@@ -62,17 +76,30 @@
     var s = load();
     if (i === 8) { $('c-title').textContent = 'الاختبار النهائي'; $('c-intro').textContent = 'نص ما اتدرّبتش عليه (٤٠٠ حرف تقريباً أو أكتر، مفيش مؤقت: السرعة بتتحسب من أول ضغطة لآخر ضغطة). فيه نصّين بس لكل مسار فهيتكرروا بعد كام محاولة. للعدّي: دقة ٩٦٪ وسرعة ٣٠ ك/د على الأقل، ٩٨٪ و٤٥ للتميّز. الأرقام دي معايير اخترتها للتطبيق ومش معتمدة من جهة خارجية' + (track === 'ar' ? '، وفي العربي لسه مبدئية.' : '.') + ' تقدر تعيد من غير حد أقصى وأفضل نتيجة هي اللي بتتحسب. بتتقيّم على الحرف اللي بيطلع.'; $('c-drill').hidden = true; $('c-test').textContent = 'ابدأ الاختبار النهائي'; $('c-test').hidden = false; return; }
     $('c-title').textContent = (i === 0 ? '' : 'مرحلة ' + i + ': ') + TITLES[i]; $('c-intro').textContent = INTRO[i] || '';
-    if (i >= 1 && i <= 3) $('c-intro').textContent += ' لو لسه بتتعلم أماكن الحروف حرف حرف، ابدأ بتبويب دروس الأصابع (١٢ درس، كل واحد بيضيف حروف جديدة) وبعدين ارجع هنا.';
-    if (i === 0) { $('c-drill').hidden = true; $('c-test').hidden = true; return; }
+    renderSteps(i);
+    if (i === 0) { $('c-drill').hidden = true; $('c-test').hidden = true; $('c-review').hidden = true; $('c-weak').hidden = true; return; }
+    $('c-review').hidden = false; $('c-weak').hidden = false;
     var r = S.RULES[i]; $('c-intro').textContent += ' شرط العدّي: دقة ' + r.minAcc + '٪ وسرعة ' + r.minWpm + ' ك/د على الأقل (معيار للتطبيق مش معتمد من جهة خارجية).';
     $('c-drill').hidden = false; $('c-test').hidden = false; $('c-test').textContent = S.stageOpen(s, track, i - 1) || i === 1 ? 'اختبار المرحلة' : 'اختبار المرحلة (اختبار مباشر)';
   }
 
+  function renderSteps(i) {
+    var box = $('c-steps'), s = load(); box.innerHTML = '';
+    if (i < 1 || i > 3) return;
+    var sd = S.stepsDone(s, track, i);
+    var h = document.createElement('p'); h.className = 'note'; h.textContent = 'خطوات الحروف: ' + sd[0] + ' من ' + sd[1] + ' (كل خطوة: حرفين جداد، أزواج حروف، كلمات حقيقية، جملة. المطلوب دقة ٩٠٪ من غير شرط سرعة). تقدر تعمل اختبار المرحلة مباشرة لو عارف الحروف.'; box.appendChild(h);
+    G.stepsOf(i).forEach(function (idx) {
+      var b = document.createElement('button'); b.className = 'les'; var open = S.stepOpen(s, track, idx); b.disabled = !open;
+      var done = S.stepDone(s, track, idx), keys = G.STEPS[idx].add.map(function (c) { return L.LAYOUT[track][c] || c; }).join(' ');
+      b.innerHTML = '<b></b><span></span><div class="st"></div>'; b.firstChild.textContent = 'خطوة ' + (idx + 1); b.children[1].textContent = keys; b.children[2].textContent = done ? '✓ تمت' : (open ? 'مفتوحة' : 'مقفولة');
+      b.onclick = function () { stepIdx = idx; begin('step'); }; box.appendChild(b);
+    });
+  }
   function begin(kind) {
     mode = kind; target = textFor(kind, stage); events = []; typed = []; startedAt = 0; rejected = 0;
     $('c-info').hidden = true; $('c-play').classList.add('on'); $('c-result').hidden = true;
     $('c-ribbon').className = 'ribbon' + (track === 'en' ? ' ltr' : '');
-    $('c-msg').textContent = kind === 'drill' ? 'تمرين: الزرار الغلط مبيقدّمكش. Esc للخروج.' : 'اختبار: تقدر تمسح بـ Backspace. Esc للخروج.';
+    $('c-msg').textContent = isDrill(kind) ? 'تمرين: الزرار الغلط مبيقدّمكش. Esc للخروج.' : 'اختبار: تقدر تمسح بـ Backspace. Esc للخروج.';
     render();
   }
   function render() {
@@ -89,8 +116,11 @@
     var done = mode; $('c-play').classList.remove('on'); mode = null;
     var box = $('c-result'); box.hidden = false; $('c-info').hidden = false;
     var s = load(), msg = '';
-    if (done === 'drill') {
-      msg = 'خلصت التمرين: ' + res.acc + '% دقة.';
+    if (done === 'step') {
+      var o2 = S.addResult(s, track, 'step', stepIdx, res); save(o2.state); s = o2.state;
+      msg = o2.record.passed ? 'عدّيت الخطوة. الخطوة اللي بعدها اتفتحت.' : 'الدقة ' + res.acc + '٪. المطلوب ٩٠٪ على الأقل عشان تعدّي الخطوة، من غير شرط سرعة. جرّب تاني بهدوء.';
+    } else if (isDrill(done)) {
+      msg = 'خلصت التمرين: ' + res.acc + '% دقة.' + (done === 'weak' ? ' ده تدريب بس ومبيتسجلش.' : '');
     } else {
       var kind = done === 'exam' ? 'exam' : 'stage', ref = done === 'exam' ? examIdx : stage;
       var out = S.addResult(s, track, kind, ref, res); save(out.state); s = out.state;
@@ -111,11 +141,11 @@
     if (mode === 'exam' && !C.isTypingEvent(e)) { rejected++; return; }
     var now = Date.now(); if (!startedAt) startedAt = now;
     var chars = Array.from(target);
-    if (e.key === 'Backspace') { if (mode === 'drill') return; events.push({ t: now, type: 'back' }); typed.pop(); render(); return; }
-    if (e.key === 'Enter') { if (mode !== 'drill' && typed.length >= chars.length) finish(); return; }
+    if (e.key === 'Backspace') { if (isDrill(mode)) return; events.push({ t: now, type: 'back' }); typed.pop(); render(); return; }
+    if (e.key === 'Enter') { if (!isDrill(mode) && typed.length >= chars.length) finish(); return; }
     var ch = e.key; if (ch.length > 2) return;
     var ev = { t: now, type: 'key', ch: ch, code: e.code, shift: e.shiftKey };
-    if (mode === 'drill') {
+    if (isDrill(mode)) {
       var want = chars[typed.length], ex = codeFor() ? codeFor()(want) : null;
       var hit = ex && e.code ? ex.code === e.code : ch === want;
       if (!hit) { events.push({ t: now, type: 'key', ch: ch, code: e.code, shift: e.shiftKey, bad: true }); flash(); return; }
@@ -126,7 +156,7 @@
       typed = run;
     }
     if (typed.length >= chars.length) {
-      if (mode === 'drill' || typed.every(Boolean)) { finish(); return; }
+      if (isDrill(mode) || typed.every(Boolean)) { finish(); return; }
       $('c-msg').textContent = 'فيه غلطات. امسح وصحّح، أو اضغط Enter عشان تسلّم.';
     }
     render();
@@ -143,8 +173,10 @@
     x.fillStyle = '#6d28d9'; x.font = '700 80px "Segoe UI",Tahoma,Arial'; x.fillText(c.name, W / 2, 400);
     x.fillStyle = '#2a1458'; x.font = '34px "Segoe UI",Tahoma,Arial';
     x.fillText(ar ? 'خلّص كورس الكتابة العربي في تطبيق مدرّب الكتابة' + (c.distinction ? ' بتميّز' : '') : 'completed the English typing course in the Typing Trainer app' + (c.distinction ? ' with distinction' : ''), W / 2, 490);
-    x.fillText((ar ? 'الاختبار النهائي: ' : 'Final test: ') + c.wpm + (ar ? ' كلمة/د · دقة ' : ' WPM · accuracy ') + c.acc + '% · ' + (ar ? 'ثبات ' : 'consistency ') + c.cons, W / 2, 560);
-    x.fillStyle = '#5b4a85'; x.font = '26px "Segoe UI",Tahoma,Arial'; x.fillText(new Date(c.t).toLocaleDateString(ar ? 'ar-EG' : 'en-GB', { year: 'numeric', month: 'long', day: 'numeric' }), W / 2, 630);
+    var sm = !!c.sample, pv = function (v, u) { return sm ? '--' + (u || '') : v + (u || ''); };
+    x.fillText((ar ? 'الاختبار النهائي: ' : 'Final test: ') + pv(c.wpm) + (ar ? ' كلمة/د · دقة ' : ' WPM · accuracy ') + pv(c.acc, '%') + ' · ' + (ar ? 'ثبات ' : 'consistency ') + pv(c.cons), W / 2, 560);
+    x.fillStyle = '#5b4a85'; x.font = '26px "Segoe UI",Tahoma,Arial'; x.fillText(c.sample ? (ar ? 'التاريخ: --' : 'Date: --') : new Date(c.t).toLocaleDateString(ar ? 'ar-EG' : 'en-GB', { year: 'numeric', month: 'long', day: 'numeric' }), W / 2, 630);
+    if (c.sample) { x.save(); x.translate(W / 2, H / 2); x.rotate(-0.35); x.font = '700 110px "Segoe UI",Tahoma,Arial'; x.fillStyle = 'rgba(220,38,38,0.16)'; x.direction = 'rtl'; x.fillText('نموذج للمعاينة فقط', 0, 0); x.restore(); x.direction = ar ? 'rtl' : 'ltr'; x.fillStyle = '#b91c1c'; x.font = '700 26px "Segoe UI",Tahoma,Arial'; x.fillText('معاينة شكل الشهادة: مش شهادة حقيقية، والنتيجة والتاريخ لسه ما اتكتبوش.', W / 2, 110); }
     x.font = '22px "Segoe UI",Tahoma,Arial'; x.fillStyle = '#6b5d8f';
     x.fillText(ar ? 'الشهادة دي صادرة من التطبيق نفسه وبتسجّل إتمام الكورس ونتيجتك فيه بس.' : 'Issued by this app. It records completion and results inside this app only.', W / 2, 740);
     x.fillText(ar ? 'مش تحقق من هوية ولا شهادة مهارة معتمدة، ومحفوظة في المتصفح فمش مقاومة للتعديل.' : 'Not identity verification, not an accredited qualification, and not tamper-proof (stored in the browser).', W / 2, 780);
@@ -154,6 +186,12 @@
   $('ct-ar').onclick = function () { track = 'ar'; $('ct-ar').classList.add('on'); $('ct-en').classList.remove('on'); mode = null; $('c-play').classList.remove('on'); $('c-info').hidden = true; renderMap(); };
   $('ct-en').onclick = function () { track = 'en'; $('ct-en').classList.add('on'); $('ct-ar').classList.remove('on'); mode = null; $('c-play').classList.remove('on'); $('c-info').hidden = true; renderMap(); };
   $('c-drill').onclick = function () { begin('drill'); };
+  $('c-review').onclick = function () { begin('review'); };
+  $('c-weak').onclick = function () {
+    var s = load(), w = G.weakKeys(s.results, track, 3);
+    if (!w.length) { $('c-note').textContent = 'لسه مفيش بيانات كفاية عن حروفك. اعمل كام خطوة أو اختبار الأول (٤ ضغطات على الأقل لكل حرف).'; $('c-result').hidden = true; return; }
+    begin('weak');
+  };
   $('c-test').onclick = function () { begin(stage === 8 ? 'exam' : 'test'); };
   $('c-exit').onclick = function () { mode = null; $('c-play').classList.remove('on'); $('c-info').hidden = false; };
   $('c-issue').onclick = function () {
@@ -162,5 +200,5 @@
   };
   $('c-dl').onclick = function () { $('c-canvas').toBlob(function (b) { var a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = 'typing-certificate.png'; a.click(); }); };
   window.addEventListener('storage', renderMap);
-  window.__courseRender = renderMap; renderMap();
+  window.__drawCert = drawCert; window.__courseRender = renderMap; renderMap();
 })();

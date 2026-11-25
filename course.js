@@ -23,7 +23,9 @@
 
   // events: [{t:ms, type:'key'|'back', ch, code, shift}] in order. target: string.
   function score(target, events, codeFor) {
-    var typed = [], corrected = 0, first = null, last = null, secs = {};
+    var typed = [], corrected = 0, first = null, last = null, secs = {}, perKey = {}, badPresses = 0, prevT = null;
+    function kid(i) { var ex = expectedFor(target, i, codeFor); return ex && ex.code ? ex.code : target.charAt(i); }
+    function stat(i, wrong, dt) { var k = kid(i), v = perKey[k] || (perKey[k] = [0, 0, 0]); v[0]++; if (wrong) v[1]++; else v[2] += dt; }
     function ok(i, e) {
       var exp = expectedFor(target, i, codeFor);
       if (exp && e.code) return exp.code === e.code && !!exp.shift === !!e.shift;
@@ -31,6 +33,8 @@
     }
     events.forEach(function (e) {
       if (first === null) first = e.t; last = e.t;
+      var dt = prevT === null ? 0 : Math.min(e.t - prevT, 5000); prevT = e.t;
+      if (e.bad) { if (typed.length < target.length) { badPresses++; stat(typed.length, true, 0); } return; } // wrong key in a drill: attempt recorded, position does not advance
       if (e.type === 'back') {
         if (typed.length) { var r = typed.pop(); if (!r.ok) corrected++; }
         return;
@@ -40,14 +44,15 @@
       if (e.ch && e.ch.length === 2 && target.substr(typed.length, 2) === e.ch) {
         typed.push({ ok: true, t: e.t }); typed.push({ ok: true, t: e.t }); return;
       }
-      typed.push({ ok: ok(typed.length, e), t: e.t });
+      var okNow = ok(typed.length, e); stat(typed.length, !okNow, dt);
+      typed.push({ ok: okNow, t: e.t });
     });
     var correct = typed.filter(function (x) { return x.ok; }).length;
     var wrong = typed.length - correct, missing = target.length - typed.length;
     typed.forEach(function (x) { if (x.ok) { var s = Math.floor((x.t - first) / 1000); secs[s] = (secs[s] || 0) + 1; } });
     var ms = first === null ? 0 : last - first;
     var wpm = ms > 0 ? (correct / 5) / (ms / 60000) : 0;
-    var denom = typed.length + corrected;
+    var denom = typed.length + corrected + badPresses;
     var acc = denom ? 100 * correct / denom : 0;
     var n = ms > 0 ? Math.floor(ms / 1000) + 1 : 0, vals = [];
     for (var i = 0; i < n; i++) vals.push(secs[i] || 0);
@@ -58,7 +63,7 @@
       cons = mean > 0 ? Math.max(0, Math.min(100, Math.round(100 - 100 * sd / mean))) : 0;
     }
     return { correct: correct, uncorrected: wrong + Math.max(0, missing), wrong: wrong, missing: Math.max(0, missing), corrected: corrected,
-      typed: typed.length, ms: ms, wpm: Math.round(wpm * 10) / 10, acc: Math.round(acc * 10) / 10, consistency: cons, complete: missing <= 0 };
+      typed: typed.length, bad: badPresses, perKey: perKey, ms: ms, wpm: Math.round(wpm * 10) / 10, acc: Math.round(acc * 10) / 10, consistency: cons, complete: missing <= 0 };
   }
 
   function passes(res, rule) {

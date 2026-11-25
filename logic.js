@@ -183,6 +183,7 @@
   // progress: { ar: { "0": {stars, acc, wpm, tries} }, en: {...} }
   function isUnlocked(progress, lang, idx) {
     if (idx === 0) return true;
+    if (progress && progress.manual && progress.manual[lang]) return true;
     var p = progress && progress[lang] && progress[lang][String(idx - 1)];
     return !!(p && p.stars >= 1);
   }

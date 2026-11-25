@@ -24,12 +24,12 @@
     var p = load(), box = $('lesson-list'); box.innerHTML = ''; var done = 0;
     for (var i = 0; i < L.lessonCount(); i++) (function (i) {
       var rec = p[lang] && p[lang][String(i)]; if (rec && typeof rec.stars !== 'number') rec = null; var ok = L.isUnlocked(p, lang, i);
-      if (rec && rec.stars >= 1) done++;
+      var man = !!(p.manual && p.manual[lang]); if ((rec && rec.stars >= 1) || man) done++;
       var b = document.createElement('button'); b.className = 'les' + (i === cur ? ' cur' : ''); b.disabled = !ok;
       b.innerHTML = '<b>درس ' + (i + 1) + '</b>';
       var t = document.createElement('span'); t.textContent = L.STEPS[i].title; b.appendChild(t);
       var st = document.createElement('div'); st.className = 'st';
-      st.textContent = ok ? (rec ? '★'.repeat(rec.stars) + '☆'.repeat(3 - rec.stars) : '☆☆☆') : 'مقفول';
+      st.textContent = ok ? (rec ? '★'.repeat(rec.stars) + '☆'.repeat(3 - rec.stars) : (man ? '✓ مكتمل يدوي' : '☆☆☆')) : 'مقفول';
       b.appendChild(st);
       if (rec) { var m = document.createElement('small'); m.className = 'muted'; m.textContent = 'أفضل: ' + rec.acc + '% · ' + rec.wpm + ' ك/د'; b.appendChild(m); }
       b.onclick = function () { begin(i); };

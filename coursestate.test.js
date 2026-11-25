@@ -35,3 +35,18 @@ test('records have unique ids so sync merges by id', function () {
   var s = S.empty(); for (var i = 0; i < 20; i++) s = S.addResult(s, 'en', 'stage', 1, good(50, 1), 1000).state;
   assert.equal(new Set(s.results.map(function (r) { return r.id; })).size, 20);
 });
+test('steps: sequential, accuracy-only gate, stage test-out opens the whole stage, kstats stored', function () {
+  var G = require('./coursegen.js'); assert.deepEqual(S.STEP_STAGE, G.STEPS.map(function (x) { return x.stage; }));
+  var s = S.empty(); assert.ok(S.stepOpen(s, 'en', 0)); assert.ok(!S.stepOpen(s, 'en', 1)); assert.ok(!S.stepOpen(s, 'en', 5));
+  var low = { acc: 89, wpm: 0, complete: true, perKey: { KeyF: [5, 1, 900] } }; s = S.addResult(s, 'en', 'step', 0, low, 1).state; assert.ok(!S.stepDone(s, 'en', 0));
+  s = S.addResult(s, 'en', 'step', 0, { acc: 90, wpm: 1, complete: true, perKey: { KeyF: [5, 0, 900] } }, 2).state; assert.ok(S.stepDone(s, 'en', 0)); assert.ok(S.stepOpen(s, 'en', 1)); assert.ok(!S.stepOpen(s, 'en', 2));
+  assert.deepEqual(s.results[s.results.length - 1].kstats, { KeyF: [5, 0, 900] }); assert.deepEqual(S.stepsDone(s, 'en', 1), [1, 5]);
+  var s2 = S.addResult(S.empty(), 'en', 'stage', 1, { acc: 95, wpm: 20, complete: true }, 1).state; assert.ok(S.stepOpen(s2, 'en', 4)); assert.ok(S.stepOpen(s2, 'en', 5)); assert.ok(!S.stepOpen(s2, 'en', 6));
+  var inc = S.addResult(S.empty(), 'en', 'step', 0, { acc: 100, wpm: 0, complete: false }, 1).state; assert.ok(!S.stepDone(inc, 'en', 0));
+});
+test('manual completion unlocks everything, has no scores, never counts as an exam or certificate', function () {
+  var s = S.markManual(S.addResult(S.empty(), 'en', 'stage', 1, { acc: 95, wpm: 20, complete: true }, 5).state, 'en', 9);
+  assert.equal(S.highestPassed(s, 'en'), 7); assert.ok(S.examOpen(s, 'en')); assert.ok(S.stepOpen(s, 'en', 15)); assert.ok(S.stepDone(s, 'en', 3));
+  assert.equal(S.bestExam(s, 'en'), null); assert.equal(S.issueCertificate(s, 'en', 'x').error, 'no-pass'); assert.equal(S.highestPassed(s, 'ar'), 0);
+  assert.equal(s.results.length, 1); assert.equal(S.markManual(s, 'en', 10).manual.length, 1); assert.equal(S.clean(JSON.parse(JSON.stringify(s))).manual.length, 1);
+});

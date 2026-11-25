@@ -30,6 +30,7 @@
     state.words = L.pickWords(L.BANK[state.lang], 120);
     state.idx = 0; state.typed = []; state.start = 0; state.done = false;
     $('timer').textContent = state.secs;
+    $('bar').style.width = '0%'; $('livewpm').textContent = '0';
     $('hint').textContent = 'ابدأ الكتابة وهيشتغل العدّاد';
     $('input').value = ''; $('input').disabled = false;
     $('result').hidden = true;
@@ -40,6 +41,9 @@
   function tick() {
     var left = state.secs - Math.floor((Date.now() - state.start) / 1000);
     $('timer').textContent = Math.max(left, 0);
+    var el = Date.now() - state.start;
+    $('bar').style.width = Math.min(100, el / (state.secs * 10)) + '%';
+    $('livewpm').textContent = L.summarize(state.words, state.typed, el).wpm;
     if (left <= 0) finish();
   }
 
@@ -87,7 +91,7 @@
     var h = load();
     var cv = $('chart'), ctx = cv.getContext('2d');
     var w = cv.clientWidth, ht = cv.clientHeight, dpr = window.devicePixelRatio || 1;
-    cv.width = w * dpr; cv.height = ht * dpr; ctx.scale(dpr, dpr); ctx.clearRect(0, 0, w, ht);
+    cv.width = w * dpr; cv.height = ht * dpr; ctx.scale(dpr, dpr); ctx.direction = 'ltr'; ctx.clearRect(0, 0, w, ht);
     var pts = h.slice(-20);
     $('chart-empty').hidden = pts.length > 0;
     if (pts.length) {

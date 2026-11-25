@@ -3,43 +3,62 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="theme-color" content="#161E2F">
+<meta name="theme-color" content="#120b24">
 <meta name="description" content="مدرّب كتابة بالعربي والإنجليزي: سرعة ودقة وأكثر الحروف اللي بتغلط فيها.">
 <link rel="icon" type="image/svg+xml" href="logo.svg">
 <title>مدرّب الكتابة</title>
 <link rel="stylesheet" href="style.css">
 <style>
-.words{font-size:1.7rem;line-height:2.4;padding:18px;border:1px solid var(--line);border-radius:14px;background:rgba(0,0,0,.22);height:230px;overflow:hidden;user-select:none}
+:root{--bg:#120b24;--panel:#1c1237;--line:rgba(196,161,255,.18);--accent:#c9a7ff;--accent2:#7c3aed;--text:#f4efff;--muted:#b3a6d1;--good:#7ee8b0;--bad:#ff8aa5}
+body{background:var(--bg);font-family:"Segoe UI",Tahoma,"Noto Sans Arabic",Arial,sans-serif}
+body::before{background:radial-gradient(1000px 600px at 90% -10%,rgba(124,58,237,.45),transparent 60%),radial-gradient(800px 520px at -5% 20%,rgba(192,132,252,.18),transparent 60%),radial-gradient(700px 500px at 50% 115%,rgba(91,33,182,.5),transparent 60%)}
+a{color:var(--accent)}
+.hero{display:flex;align-items:center;gap:16px;margin:6px 0 22px}
+.logo{width:56px;height:56px;border-radius:16px;box-shadow:0 10px 30px rgba(124,58,237,.45)}
+.hero h1{margin:0;font-size:2rem;line-height:1.2;letter-spacing:-.01em}
+.hero p{margin:2px 0 0;color:var(--muted)}
+.card{background:rgba(28,18,55,.72);border:1px solid var(--line);backdrop-filter:blur(8px)}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:999px;padding:3px;background:rgba(0,0,0,.25);gap:2px}
+.seg button{border:0;background:transparent;min-height:38px;padding:4px 18px;border-radius:999px;color:var(--muted)}
+.seg button.on{background:linear-gradient(135deg,#9d5cff,#6d28d9);color:#fff}
+.seg-label{color:var(--muted);font-size:.9rem}
+button.primary{background:linear-gradient(135deg,#c084fc,#7c3aed);color:#fff}
+.bar{height:6px;border-radius:99px;background:rgba(255,255,255,.08);overflow:hidden;margin:10px 0 14px}
+.bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,#c084fc,#7c3aed);transition:width .25s linear}
+.live{display:flex;gap:22px;align-items:baseline}
+.timer{font-size:2.6rem;font-weight:800;line-height:1;color:#fff;font-variant-numeric:tabular-nums}
+.livewpm{color:var(--accent);font-size:1.05rem}
+.words{font-size:1.7rem;line-height:2.4;padding:20px 22px;border:1px solid var(--line);border-radius:18px;background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.02));height:230px;overflow:hidden;user-select:none}
 .words[dir=ltr]{font-family:ui-monospace,Consolas,monospace;font-size:1.5rem}
-.w{padding:0 5px;border-radius:6px;display:inline-block}
-.w.cur{background:rgba(255,165,134,.22);outline:1px solid var(--accent)}
+.w{padding:0 5px;border-radius:7px;display:inline-block}
+.w.cur{background:rgba(201,167,255,.2);box-shadow:inset 0 -3px 0 var(--accent)}
 .w.ok{color:var(--good)}.w.no{color:var(--bad);text-decoration:line-through}
-.logo{width:42px;height:42px;vertical-align:middle;margin-inline-end:10px}
+#input{font-size:1.3rem;margin-top:14px;border-radius:14px;background:rgba(0,0,0,.35)}
+#input:focus{border-color:var(--accent)}
+.stat{background:rgba(255,255,255,.04)}
+.stat b{background:linear-gradient(120deg,#fff,var(--accent));-webkit-background-clip:text;background-clip:text;color:transparent}
 canvas{width:100%;height:160px;display:block}
-.keys span{display:inline-block;margin:3px;padding:4px 12px;border-radius:10px;border:1px solid var(--line);background:rgba(255,255,255,.04)}
-.timer{font-size:2rem;font-weight:800;color:var(--accent)}
-#input{font-size:1.3rem;margin-top:14px}
+.keys span{display:inline-block;margin:3px;padding:4px 12px;border-radius:10px;border:1px solid var(--line);background:rgba(124,58,237,.18)}
+footer{color:var(--muted)}
 </style>
 </head>
 <body>
 <main class="wrap">
-<header class="top"><h1><img class="logo" src="logo.svg" alt="">مدرّب الكتابة</h1><a href="https://abdalhady.vercel.app">← البورتفوليو</a></header>
-<p class="lead">اكتب الكلمات اللي قدامك. السرعة بتتحسب من الكلمات الصح بس، والدقة من الحروف.</p>
+<header class="hero"><img class="logo" src="logo.svg" alt=""><div><h1>مدرّب الكتابة</h1><p>اكتب أسرع وبدقة أعلى، بالعربي أو الإنجليزي</p></div></header>
 
 <section class="card" aria-label="الإعدادات">
-<div class="row">
-<span class="muted">اللغة</span>
-<button id="lang-ar" class="on" aria-pressed="true">عربي</button>
-<button id="lang-en" aria-pressed="false">English</button>
-<span class="muted" style="margin-inline-start:14px">المدة</span>
-<button id="t-30" class="on" aria-pressed="true">٣٠ ث</button>
-<button id="t-60" aria-pressed="false">٦٠ ث</button>
+<div class="row" style="gap:14px">
+<span class="seg-label">اللغة</span>
+<div class="seg"><button id="lang-ar" class="on" aria-pressed="true">عربي</button><button id="lang-en" aria-pressed="false">English</button></div>
+<span class="seg-label">المدة</span>
+<div class="seg"><button id="t-30" class="on" aria-pressed="true">٣٠ ث</button><button id="t-60" aria-pressed="false">٦٠ ث</button></div>
 <button id="restart" class="primary" style="margin-inline-start:auto">جملة جديدة</button>
 </div>
 </section>
 
 <section class="card">
-<div class="row" style="justify-content:space-between"><div class="timer" id="timer" aria-live="off">30</div><div class="muted" id="hint">ابدأ الكتابة وهيشتغل العدّاد</div></div>
+<div class="live"><div class="timer" id="timer" aria-live="off">30</div><div class="livewpm"><span id="livewpm">0</span> ك/د</div><div class="muted" id="hint" style="margin-inline-start:auto">ابدأ الكتابة وهيشتغل العدّاد</div></div>
+<div class="bar"><i id="bar"></i></div>
 <div id="words" class="words" dir="rtl" aria-label="الكلمات المطلوبة"></div>
 <label class="sr" for="input">اكتب هنا</label>
 <input id="input" type="text" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="اكتب هنا، المسطرة بتنقلك للكلمة اللي بعدها">
@@ -63,7 +82,7 @@ canvas{width:100%;height:160px;display:block}
 <div class="keys" id="weak"><span class="muted">هتظهر بعد أول محاولة.</span></div>
 <div class="row" style="margin-top:12px"><button id="clear" class="danger">مسح السجل</button></div>
 </section>
-<footer>البيانات محفوظة في المتصفح بس. الكلمات مكتوبة بإيدينا، والتشكيل مش بيتحسب غلط. اتبنى بمساعدة ذكاء اصطناعي. <a href="https://github.com/abdalhadymahmoud9-crypto/typing-trainer">الكود</a></footer>
+<footer>النتايج بتتحفظ في المتصفح بتاعك بس. <a href="https://github.com/abdalhadymahmoud9-crypto/typing-trainer">الكود على GitHub</a></footer>
 </main>
 <script src="logic.js"></script>
 <script src="app.js"></script>
